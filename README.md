@@ -1,9 +1,9 @@
 # horde
 
 Unleash hordes of [zombies](https://github.com/assaf/zombie) to tear your [test
-suite](http://visionmedia.github.io/mocha/) to shreds in record time.
+suite](http://visionmedia.github.io/mocha/) to shreds in record time!
 
-## About
+## What?
 
 Horde is designed to solve a fairly specific problem: speeding up very long
 running integration test suites which use the
