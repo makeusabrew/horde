@@ -1,15 +1,17 @@
 #!/usr/bin/env coffee
+#
 child_process = require "child_process"
-async = require "async"
-fs = require "fs"
+async         = require "async"
+fs            = require "fs"
 
+# store an array of child processes
 procs = []
-maxProcs = +process.argv[5]
-outputFile = process.argv[4]
-hostDir = process.argv[2]
-image = process.argv[3]
 
-lineLength = 50
+# @TODO validation around user input
+maxProcs   = +process.argv[5]
+outputFile = process.argv[4]
+hostDir    = process.argv[2]
+image      = process.argv[3]
 
 child_process.exec "ls -lah #{hostDir}/test/*.coffee", (err, stdout, stderr) ->
   lines = stdout.split "\n"
@@ -21,7 +23,7 @@ child_process.exec "ls -lah #{hostDir}/test/*.coffee", (err, stdout, stderr) ->
 
   async.forEach files, getTestCount, (err) ->
     chunks = chunkTests testFiles
-    runSuite chunks
+    runSuites chunks
 
 chunkTests = (files) ->
   files.sort (a, b) -> return b.testCount - a.testCount
@@ -35,7 +37,6 @@ chunkTests = (files) ->
     chunks.push
       files: []
       title: "batch_#{i+1}"
-      cmd: null
 
   for file, i in files
     mod = i % maxProcs
@@ -56,52 +57,53 @@ totalStats =
 
 testResults = {}
 
-runSuite = (chunks) ->
+runSuites = (chunks) ->
 
   totalStats.start = new Date()
 
-  baseArgs = "run -v #{hostDir}:/var/www #{image} /horde/boot.coffee --reporter json-stream".split(" ")
+  runSuite chunk for chunk in chunks
 
-  for chunk in chunks
-    extraArgs = (file for file in chunk.files)
-    combinedArgs = [].concat baseArgs, extraArgs
+runSuite = (suite) ->
 
-    #console.log "spawning docker " + combinedArgs.join(" ")
-    cmd = child_process.spawn "docker", combinedArgs
+  baseArgs     = "run -v #{hostDir}:/var/www #{image} /horde/boot.coffee --reporter json-stream".split(" ")
+  extraArgs    = (file for file in suite.files)
+  combinedArgs = baseArgs.concat extraArgs
 
-    # we want to buffer our test outcomes into coherent chunks
-    testResults[chunk.title] = []
+  #console.log "spawning docker " + combinedArgs.join(" ")
+  cmd = child_process.spawn "docker", combinedArgs
 
-    cmd.stdout.on "data", (d) ->
-      #process.stdout.write d
+  # we want to buffer our test outcomes into coherent chunks
+  testResults[suite.title] = []
 
-      lines = d.toString("utf8").split "\n"
-      for line in lines
-        zombie = line.split "[zombie] "
-        continue if zombie.length isnt 2
+  cmd.stdout.on "data", (d) ->
+    #process.stdout.write d
 
-        json = zombie[1]
+    lines = d.toString("utf8").split "\n"
+    for line in lines
+      zombie = line.split "[zombie] "
+      continue if zombie.length isnt 2
 
-        renderLine json, testResults[chunk.title]
+      json = zombie[1]
 
-    cmd.stderr.on "data", (d) -> process.stderr.write d
+      renderLine json, testResults[suite.title]
 
-    cmd.on "exit", (code) ->
-      console.log "EXIT", code
+  cmd.stderr.on "data", (d) -> process.stderr.write d
 
-    cmd.on "error", ->
-      console.log "ERROR"
+  cmd.on "exit", (code) ->
+    # ideally we'd hook into this and use it to summarise each test suite
+    # but for some reason child_process + docker run + child_process is
+    # somewhere along the line causing this to *never* be fired
+    console.log "EXIT", code
 
-    chunk.cmd = cmd
-
-    procs.push cmd
+  procs.push cmd
 
 process.on "SIGINT", ->
   console.log "SIGINT"
   proc.kill() for proc in procs
   process.exit 0
 
-testChars = 0
+testChars  = 0
+lineLength = 50
 writeChar = (char) ->
   process.stdout.write char
   if testChars % lineLength is lineLength-1
@@ -196,7 +198,7 @@ doSummary = ->
     writeResults flatResults, outputFile, doExit
 
 doExit = ->
-  returnCode = 0
+  returnCode = if failures.length is 0 then 0 else 1
   console.log "Exiting with overall status #{returnCode}"
   process.exit returnCode
 
