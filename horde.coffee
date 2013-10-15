@@ -29,26 +29,56 @@ child_process.exec "ls -lah #{hostDir}/test/*.coffee", (err, stdout, stderr) ->
     runSuites()
 
 chunkTests = (files) ->
+
+  sum = 0
+  sum += file.testCount for file in files
+
+  # ideally we'd split the number of tests precisely across our number of procs
+  target = Math.round sum / maxProcs
+
+  # now we want to find out the most efficient way of
+  # chunking the files
+
+  chunkRuns = []
+  retries = 5000
+
+  process.stdout.write "Attempting to fetch optimum suite distribution, please wait..."
+  doChunk = ->
+    chunks = []
+    for i in [0...maxProcs]
+      chunks.push
+        files: []
+        testCount: 0
+        index: i+1
+        results: []
+
+    for file, i in files
+      mod = i % maxProcs
+      chunks[mod].files.push file.file
+      chunks[mod].testCount += file.testCount
+
+    totalDeviation = 0
+    totalDeviation += Math.abs chunk.testCount - target for chunk in chunks
+
+    chunkRuns.push
+      chunks: chunks
+      totalDeviation: totalDeviation
+
+    retries -= 1
+    if retries is 0
+      chunkRuns.sort (a, b) -> if b.totalDeviation > a.totalDeviation then -1 else 1
+      chunkRun = chunkRuns[0]
+      avgDeviation = Math.round chunkRun.totalDeviation / chunkRun.chunks.length
+      process.stdout.write " total deviation of #{chunkRun.totalDeviation} (avg: #{avgDeviation})\n\n"
+      return chunkRun.chunks
+
+    files.sort -> if Math.random() >= 0.5 then -1 else 1
+    doChunk()
+
+  # first pass, we chunk by number of tests, highest -> lowest
   files.sort (a, b) -> return b.testCount - a.testCount
 
-  # files is now sorted from least tests to most tests
-  # we need to chunk it properly now
-  chunkSize = Math.ceil(files.length / maxProcs)
-
-  chunks = []
-  for i in [0...maxProcs]
-    chunks.push
-      files: []
-      testCount: 0
-      index: i+1
-      results: []
-
-  for file, i in files
-    mod = i % maxProcs
-    chunks[mod].files.push file.file
-    chunks[mod].testCount += file.testCount
-
-  return chunks
+  return doChunk()
 
 totalStats =
   start: null
