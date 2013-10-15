@@ -59,7 +59,7 @@ runSuite = (chunks) ->
 
   totalStats.start = new Date()
 
-  baseArgs = "run -v #{hostDir}:/var/www #{image} coffee /run.coffee --reporter json-stream".split(" ")
+  baseArgs = "run -v #{hostDir}:/var/www #{image} coffee /horde/boot.coffee --reporter json-stream".split(" ")
 
   for chunk in chunks
     extraArgs = (file for file in chunk.files)
