@@ -25,10 +25,11 @@ child_process.exec "ls -lah #{hostDir}/test/*.coffee", (err, stdout, stderr) ->
     files.push matches[1] if matches
 
   async.forEach files, getTestCount, (err) ->
-    suites = chunkTests testFiles
-    runSuites()
+    chunkTests testFiles, (chunks) ->
+      suites = chunks
+      runSuites()
 
-chunkTests = (files) ->
+chunkTests = (files, callback) ->
 
   sum = 0
   sum += file.testCount for file in files
@@ -39,11 +40,14 @@ chunkTests = (files) ->
   # now we want to find out the most efficient way of
   # chunking the files
 
-  chunkRuns = []
-  retries = 5000
+  timeAllowed = 2000
+  startTime = Date.now()
+  totalRuns = 0
+  bestRun =
+    chunks: []
+    totalDeviation: 9999999
 
-  process.stdout.write "Attempting to fetch optimum suite distribution, please wait..."
-  doChunk = ->
+  doChunk = (done) ->
     chunks = []
     for i in [0...maxProcs]
       chunks.push
@@ -60,25 +64,29 @@ chunkTests = (files) ->
     totalDeviation = 0
     totalDeviation += Math.abs chunk.testCount - target for chunk in chunks
 
-    chunkRuns.push
-      chunks: chunks
-      totalDeviation: totalDeviation
+    if totalDeviation < bestRun.totalDeviation
+      bestRun =
+        chunks: chunks
+        totalDeviation: totalDeviation
 
-    retries -= 1
-    if retries is 0
-      chunkRuns.sort (a, b) -> if b.totalDeviation > a.totalDeviation then -1 else 1
-      chunkRun = chunkRuns[0]
-      avgDeviation = Math.round chunkRun.totalDeviation / chunkRun.chunks.length
-      process.stdout.write " total deviation of #{chunkRun.totalDeviation} (avg: #{avgDeviation})\n\n"
-      return chunkRun.chunks
+    totalRuns += 1
+    endTime = Date.now() - startTime
+
+    if endTime >= timeAllowed
+
+      avgDeviation = Math.round bestRun.totalDeviation / maxProcs
+      console.log "Managed #{totalRuns} runs. Best total deviation of #{bestRun.totalDeviation} (avg: #{avgDeviation})\n"
+
+      return done bestRun.chunks
 
     files.sort -> if Math.random() >= 0.5 then -1 else 1
-    doChunk()
+    process.nextTick -> doChunk done
+
+  console.log "Attempting to fetch optimum suite distribution, please wait..."
 
   # first pass, we chunk by number of tests, highest -> lowest
   files.sort (a, b) -> return b.testCount - a.testCount
-
-  return doChunk()
+  doChunk callback
 
 totalStats =
   start: null
