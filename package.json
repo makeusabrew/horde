@@ -1,8 +1,7 @@
 {
   "name": "horde",
   "version": "0.0.0",
-  "description": "ERROR: No README.md file found!",
-  "main": "index.js",
+  "description": "Unleash the horde!",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
