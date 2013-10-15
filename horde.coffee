@@ -18,6 +18,7 @@ child_process.exec "ls -lah #{hostDir}/test/*.coffee", (err, stdout, stderr) ->
   files = []
 
   for line in lines
+    # @TODO JS support
     matches = line.match /(test\/.+\.coffee$)/
     files.push matches[1] if matches
 
@@ -36,11 +37,13 @@ chunkTests = (files) ->
   for i in [0...maxProcs]
     chunks.push
       files: []
+      testCount: 0
       title: "batch_#{i+1}"
 
   for file, i in files
     mod = i % maxProcs
     chunks[mod].files.push file.file
+    chunks[mod].testCount += file.testCount
 
   return chunks
 
@@ -70,6 +73,7 @@ runSuite = (suite) ->
   combinedArgs = baseArgs.concat extraArgs
 
   #console.log "spawning docker " + combinedArgs.join(" ")
+  console.log "Spawning docker instance with #{suite.files.length} test files and approximately #{suite.testCount} tests"
   cmd = child_process.spawn "docker", combinedArgs
 
   # we want to buffer our test outcomes into coherent chunks
@@ -158,9 +162,14 @@ getTestCount = (item, callback) ->
   fs.readFile "#{hostDir}/#{item}", (err, data) ->
     throw err if err
 
+    # we take the number of it "...", -> expectations as a rough indicator
+    # of the number of tests in this file
     matches = data.toString().match /it ".+", ->/g
 
-    testFiles.push {file: item, testCount: matches.length}
+    testFiles.push
+      file: item
+      testCount: matches.length
+
     callback()
 
 doneSuites = 0
