@@ -120,42 +120,42 @@ totalTests = 0
 
 failures = []
 renderLine = (line, results) ->
-    return if line is ''
+  return if line is ''
 
-    try
-      test = JSON.parse line
-    catch e
-      #console.log "Could not parse JSON: "+e.toString()
-      #console.log line
-      return
+  try
+    test = JSON.parse line
+  catch e
+    #console.log "Could not parse JSON: "+e.toString()
+    #console.log line
+    return
 
-    title = test[1].fullTitle
+  title = test[1].fullTitle
 
-    switch test[0]
-      when "pass"
-        writeChar "."
-      when "fail"
-        failures.push test
-        writeChar "F"
-      when "start"
-        totalTests += test[1].total
-        process.stdout.write "Starting mocha test suite with #{test[1].total} tests (#{totalTests})\n"
-      when "end"
-        totalStats.suites   += test[1].suites
-        totalStats.tests    += test[1].tests
-        totalStats.passes   += test[1].passes
-        totalStats.failures += test[1].failures
-        totalStats.duration += test[1].duration
-        totalStats.pending  += test[1].pending
+  switch test[0]
+    when "pass"
+      writeChar "."
+    when "fail"
+      failures.push test
+      writeChar "F"
+    when "start"
+      totalTests += test[1].total
+      process.stdout.write "Starting mocha test suite with #{test[1].total} tests (#{totalTests})\n"
+    when "end"
+      totalStats.suites   += test[1].suites
+      totalStats.tests    += test[1].tests
+      totalStats.passes   += test[1].passes
+      totalStats.failures += test[1].failures
+      totalStats.duration += test[1].duration
+      totalStats.pending  += test[1].pending
 
-        symbol = if test[1].failures is 0 then "✓" else "✗"
-        writeChar symbol
+      symbol = if test[1].failures is 0 then "✓" else "✗"
+      writeChar symbol
 
-        finishSuite()
-      else
-        console.log test
+      finishSuite()
+    else
+      console.log test
 
-    results.push test
+  results.push test
 
 testFiles = []
 getTestCount = (item, callback) ->
