@@ -60,11 +60,11 @@ totalStats =
 
 testResults = {}
 
-runSuites = (chunks) ->
+runSuites = (suites) ->
 
   totalStats.start = new Date()
 
-  runSuite chunk for chunk in chunks
+  runSuite suite for suite in suites
 
 runSuite = (suite) ->
 
