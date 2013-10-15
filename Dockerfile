@@ -50,3 +50,4 @@ RUN /horde/configure-mysql.sh
 ADD ./conf/all-vhosts.conf /etc/apache2/sites-enabled/000-default
 
 ADD scripts/boot.coffee /horde/boot.coffee
+RUN chmod +x /horde/boot.coffee

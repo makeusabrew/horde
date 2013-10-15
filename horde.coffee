@@ -1,3 +1,4 @@
+#!/usr/bin/env coffee
 child_process = require "child_process"
 async = require "async"
 fs = require "fs"
@@ -24,7 +25,7 @@ child_process.exec "ls -lah #{hostDir}/test/*.coffee", (err, stdout, stderr) ->
 
 chunkTests = (files) ->
   files.sort (a, b) -> return b.testCount - a.testCount
-  #
+
   # files is now sorted from least tests to most tests
   # we need to chunk it properly now
   chunkSize = Math.ceil(files.length / maxProcs)
@@ -59,7 +60,7 @@ runSuite = (chunks) ->
 
   totalStats.start = new Date()
 
-  baseArgs = "run -v #{hostDir}:/var/www #{image} coffee /horde/boot.coffee --reporter json-stream".split(" ")
+  baseArgs = "run -v #{hostDir}:/var/www #{image} /horde/boot.coffee --reporter json-stream".split(" ")
 
   for chunk in chunks
     extraArgs = (file for file in chunk.files)
