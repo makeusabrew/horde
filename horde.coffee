@@ -108,17 +108,30 @@ process.on "SIGINT", ->
 
 testChars  = 0
 lineLength = 50
+buffered   = true
+buffer     = ""
+
 writeChar = (char) ->
-  process.stdout.write char
+  if buffered
+    buffer += char
+  else
+    process.stdout.write char
+
   if testChars % lineLength is lineLength-1
     pc = Math.round((testChars / totalTests) * 100)
     process.stdout.write " (~#{pc}%) \n"
 
   testChars +=1
 
-totalTests = 0
+flushBuffer = ->
+  process.stdout.write buffer
+  buffer = ""
+  buffered = false
 
-failures = []
+totalTests    = 0
+startedSuites = 0
+failures      = []
+
 renderLine = (line, results) ->
   return if line is ''
 
@@ -140,6 +153,13 @@ renderLine = (line, results) ->
     when "start"
       totalTests += test[1].total
       process.stdout.write "Starting mocha test suite with #{test[1].total} tests (#{totalTests})\n"
+
+      startedSuites += 1
+
+      if startedSuites is maxProcs
+        process.stdout.write "\n"
+        flushBuffer()
+
     when "end"
       totalStats.suites   += test[1].suites
       totalStats.tests    += test[1].tests
