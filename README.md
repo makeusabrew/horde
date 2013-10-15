@@ -19,8 +19,8 @@ over the same test database.
 ## How?
 
 By splitting your test suite up into multiple smaller ones - each of which is
-run is in its own [docker container](http://www.docker.io/) - and running them
-all **in parallel**. This
+run in its own [docker container](http://www.docker.io/) - and executing them
+ **in parallel**. This
 not only completely isolates each database instance but *also* the entire LAMP
 server itself. The
 master horde process stitches the results of each container's
