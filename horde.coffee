@@ -13,6 +13,8 @@ outputFile = process.argv[4]
 hostDir    = process.argv[2]
 image      = process.argv[3]
 
+suites = []
+
 child_process.exec "ls -lah #{hostDir}/test/*.coffee", (err, stdout, stderr) ->
   lines = stdout.split "\n"
   files = []
@@ -23,8 +25,8 @@ child_process.exec "ls -lah #{hostDir}/test/*.coffee", (err, stdout, stderr) ->
     files.push matches[1] if matches
 
   async.forEach files, getTestCount, (err) ->
-    chunks = chunkTests testFiles
-    runSuites chunks
+    suites = chunkTests testFiles
+    runSuites()
 
 chunkTests = (files) ->
   files.sort (a, b) -> return b.testCount - a.testCount
@@ -38,7 +40,8 @@ chunkTests = (files) ->
     chunks.push
       files: []
       testCount: 0
-      title: "batch_#{i+1}"
+      index: i+1
+      results: []
 
   for file, i in files
     mod = i % maxProcs
@@ -60,7 +63,7 @@ totalStats =
 
 testResults = {}
 
-runSuites = (suites) ->
+runSuites = ->
 
   totalStats.start = new Date()
 
@@ -73,11 +76,8 @@ runSuite = (suite) ->
   combinedArgs = baseArgs.concat extraArgs
 
   #console.log "spawning docker " + combinedArgs.join(" ")
-  console.log "Spawning docker instance with #{suite.files.length} test files and approximately #{suite.testCount} tests"
+  console.log "#{suite.index}) Spawning docker instance with #{suite.files.length} test files and approximately #{suite.testCount} tests"
   cmd = child_process.spawn "docker", combinedArgs
-
-  # we want to buffer our test outcomes into coherent chunks
-  testResults[suite.title] = []
 
   cmd.stdout.on "data", (d) ->
     #process.stdout.write d
@@ -89,7 +89,7 @@ runSuite = (suite) ->
 
       json = zombie[1]
 
-      renderLine json, testResults[suite.title]
+      renderLine json, suite
 
   cmd.stderr.on "data", (d) -> process.stderr.write d
 
@@ -132,7 +132,7 @@ totalTests    = 0
 startedSuites = 0
 failures      = []
 
-renderLine = (line, results) ->
+renderLine = (line, suite) ->
   return if line is ''
 
   try
@@ -151,10 +151,13 @@ renderLine = (line, results) ->
       failures.push test
       writeChar "F"
     when "start"
-      totalTests += test[1].total
-      process.stdout.write "Starting mocha test suite with #{test[1].total} tests (#{totalTests})\n"
-
       startedSuites += 1
+      totalTests += test[1].total
+
+      if startedSuites is 1
+        process.stdout.write "\n"
+
+      process.stdout.write "#{suite.index}) Starting mocha test suite with #{test[1].total} tests (#{totalTests})\n"
 
       if startedSuites is maxProcs
         process.stdout.write "\n"
@@ -175,7 +178,7 @@ renderLine = (line, results) ->
     else
       console.log test
 
-  results.push test
+  suite.results.push test
 
 testFiles = []
 getTestCount = (item, callback) ->
@@ -220,8 +223,8 @@ doSummary = ->
 
   if outputFile
     flatResults = []
-    for key,data of testResults
-      flatResults = flatResults.concat data
+    for suite in suites
+      flatResults = flatResults.concat suite.results
 
     console.log "writing test results to #{outputFile}"
     writeResults flatResults, outputFile, doExit
