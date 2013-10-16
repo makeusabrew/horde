@@ -8,6 +8,7 @@ fs            = require "fs"
 procs = []
 
 # @TODO validation around user input
+# might as well use commander or similar
 maxProcs   = +process.argv[5]
 outputFile = process.argv[4]
 hostDir    = process.argv[2]
@@ -72,7 +73,7 @@ chunkTests = (files, callback) ->
     totalRuns += 1
     endTime = Date.now() - startTime
 
-    if endTime >= timeAllowed
+    if endTime >= timeAllowed or bestRun.totalDeviation is 0
 
       avgDeviation = Math.round bestRun.totalDeviation / maxProcs
       console.log "Managed #{totalRuns} runs. Best total deviation of #{bestRun.totalDeviation} (avg: #{avgDeviation})\n"
@@ -180,9 +181,9 @@ renderLine = (line, suite) ->
     #console.log line
     return
 
-  title = test[1].fullTitle
+  [status, details] = test
 
-  switch test[0]
+  switch status
     when "pass"
       writeChar "."
     when "fail"
@@ -190,7 +191,7 @@ renderLine = (line, suite) ->
       writeChar "F"
     when "start"
       startedSuites += 1
-      totalTests += test[1].total
+      totalTests += details.total
 
       if startedSuites is 1
         process.stdout.write "\n"
@@ -202,14 +203,14 @@ renderLine = (line, suite) ->
         flushBuffer()
 
     when "end"
-      totalStats.suites   += test[1].suites
-      totalStats.tests    += test[1].tests
-      totalStats.passes   += test[1].passes
-      totalStats.failures += test[1].failures
-      totalStats.duration += test[1].duration
-      totalStats.pending  += test[1].pending
+      totalStats.suites   += details.suites
+      totalStats.tests    += details.tests
+      totalStats.passes   += details.passes
+      totalStats.failures += details.failures
+      totalStats.duration += details.duration
+      totalStats.pending  += details.pending
 
-      symbol = if test[1].failures is 0 then "✓" else "✗"
+      symbol = if details.failures is 0 then "✓" else "✗"
       writeChar symbol
 
       finishSuite()
@@ -224,7 +225,8 @@ getTestCount = (item, callback) ->
     throw err if err
 
     # we take the number of it "...", -> expectations as a rough indicator
-    # of the number of tests in this file
+    # of the number of tests in this file, but it's NOT exact at all
+    # particularly as the matched 'it' could be inside a comment block
     matches = data.toString().match /it ".+", ->/g
 
     testFiles.push
@@ -256,7 +258,7 @@ doSummary = ->
   console.log "#{maxProcs} test suites run in a total of #{secs} seconds, #{saving}% quicker than in serial (#{serialSecs})"
 
   if failures.length
-    console.log failures.length+" failures:"
+    console.log "Dumping #{failures.length} failures:"
     console.log failures
 
   if outputFile
