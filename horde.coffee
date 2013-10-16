@@ -32,8 +32,7 @@ child_process.exec "ls -lah #{hostDir}/test/*.coffee", (err, stdout, stderr) ->
 
 chunkTests = (files, callback) ->
 
-  sum = 0
-  sum += file.testCount for file in files
+  sum = (f.testCount for f in files).reduce (a, b) -> a + b
 
   # ideally we'd split the number of tests precisely across our number of procs...
   target = Math.round sum / maxProcs
@@ -47,57 +46,61 @@ chunkTests = (files, callback) ->
   # http://en.wikipedia.org/wiki/Partition_problem#The_k-partition_problem
   # https://www.google.co.uk/search?q=k+partition+problem&oq=k+partition+problem
 
-  timeAllowed   = 2000
-  startTime     = Date.now()
-  bestDeviation = 9e6
-
-  finalSuites = []
-
-  doChunk = (done) ->
-
-    # create all the required empty chunks
-    chunks = []
-    for i in [0...maxProcs]
-      chunks.push
-        files: []
-        testCount: 0
-        index: i+1
-        results: []
-
-    # iterate through our files dumping them evenly in our available chunks
-    for file, i in files
-      mod = i % maxProcs
-      chunks[mod].files.push file.file
-      chunks[mod].testCount += file.testCount
-
-
-    # work out how far away each chunk is from its target and then sum those
-    # deviations
-    totalDeviation = 0
-    totalDeviation += Math.abs chunk.testCount - target for chunk in chunks
-
-    # current best...
-    if totalDeviation < bestDeviation
-      bestDeviation = totalDeviation
-      finalSuites = chunks
-
-    # bail early if we've got no deviation (perfect) or we've taken too long
-    if bestDeviation is 0 or (Date.now() - startTime) >= timeAllowed
-
-      avgDeviation = Math.round bestDeviation / maxProcs
-      console.log "Best average deviation of #{avgDeviation} (total: #{bestDeviation})\n"
-
-      return done finalSuites
-
-    # right, try again - just order the files randomly
-    files.sort -> if Math.random() >= 0.5 then -1 else 1
-    process.nextTick -> doChunk done
-
   console.log "Attempting to fetch optimum suite distribution, please wait..."
 
   # first pass, we chunk by number of tests, highest -> lowest
   files.sort (a, b) -> return b.testCount - a.testCount
-  doChunk callback
+  doChunk files, target, callback
+
+doChunk = (
+  files
+  target
+  done
+  # optional base params
+  startTime     = Date.now()
+  timeAllowed   = 2000
+  bestDeviation = 9e6
+  final         = []
+) ->
+
+  # create all the required empty chunks
+  chunks = []
+  for i in [0...maxProcs]
+    chunks.push
+      files: []
+      testCount: 0
+      index: i+1
+      results: []
+
+  # iterate through our files dumping them evenly in our available chunks
+  for file, i in files
+    mod = i % maxProcs
+    chunks[mod].files.push file.file
+    chunks[mod].testCount += file.testCount
+
+
+  # work out how far away each chunk is from its target and then sum those
+  # deviations
+  totalDeviation = 0
+  totalDeviation += Math.abs chunk.testCount - target for chunk in chunks
+
+  # current best...
+  if totalDeviation < bestDeviation
+    bestDeviation = totalDeviation
+    final = chunks
+
+  # bail early if we've got no deviation (perfect) or we've taken too long
+  if bestDeviation is 0 or (Date.now() - startTime) >= timeAllowed
+
+    avgDeviation = Math.round bestDeviation / maxProcs
+    console.log "Best average deviation of #{avgDeviation} (total: #{bestDeviation})\n"
+
+    return done final
+
+  # right, try again - just order the files randomly
+  files.sort -> if Math.random() >= 0.5 then -1 else 1
+  return process.nextTick ->
+    doChunk files, target, done, startTime, timeAllowed, bestDeviation, final
 
 totalStats =
   start: null
