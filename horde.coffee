@@ -154,11 +154,22 @@ runSuite = (suite) ->
 
   procs.push cmd
 
-buffer = new Buffer stream: process.stdout, lineLength: 50
-
-buffer.on "endline", (length) ->
+recentlyFinished = []
+doLineSummary = (length) ->
   pc = Math.round((length / totalTests) * 100)
-  buffer.append " (~#{pc}%)"
+
+  pc = "~#{pc}" if pc < 100
+
+  append = " (#{pc}%)"
+
+  if recentlyFinished.length
+    append += " (containers: #{recentlyFinished.join(", ")})"
+    recentlyFinished = []
+
+  buffer.append append
+
+buffer = new Buffer stream: process.stdout, lineLength: 50
+buffer.on "endline", doLineSummary
 
 totalTests    = 0
 startedSuites = 0
@@ -206,6 +217,8 @@ renderLine = (line, suite) ->
       symbol = if details.failures is 0 then "✓" else "✗"
       buffer.write symbol
 
+      recentlyFinished.push suite.index
+
       finishSuite()
     else
       console.log test
@@ -235,6 +248,8 @@ finishSuite = ->
   doSummary() if doneSuites is maxProcs
 
 doSummary = ->
+  buffer.moveToEnd()
+  doLineSummary totalTests
   process.stdout.write "\n\n#{Array(buffer.lineLength+1).join("-")}\n\n"
 
   totalStats.end = new Date()

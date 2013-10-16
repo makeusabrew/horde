@@ -7,6 +7,7 @@ class Buffer
     @buffered = true
     @buffer = ""
     @length = 0
+    @currentPos = 0
     @emitter = new EventEmitter
 
   on: (event, listener) -> @emitter.on event, listener
@@ -19,7 +20,9 @@ class Buffer
 
     @stream.write str
 
-    if @length % @lineLength is @lineLength-1
+    @currentPos = @length % @lineLength
+
+    if @currentPos is @lineLength-1
       @emitter.emit "endline", @length
 
     @length += str.length
@@ -28,3 +31,6 @@ class Buffer
     @buffered = false
     @write @buffer
     @buffer = ""
+
+  moveToEnd: ->
+    @stream.write Array(@lineLength-@currentPos).join(" ")
