@@ -26,9 +26,10 @@ RUN mkdir /var/run/sshd
 # nodejs - from source allows a custom node version
 RUN apt-get install -y git build-essential python
 RUN git clone https://github.com/joyent/node.git /horde/node -b v0.8.14
-RUN cd /horde/node && ./configure
-RUN cd /horde/node && make
-RUN cd /horde/node && make install
+RUN cd /horde/node &&  \
+    ./configure && \
+    make && \
+    make install
 
 # global npm modules
 RUN npm install -g coffee-script
