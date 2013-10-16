@@ -326,7 +326,7 @@ Horde =
         chunkTests testFiles, (chunks) ->
           suites = chunks
           runSuites()
-    stop: ->
-      proc.kill() for proc in procs
+  stop: ->
+    proc.kill() for proc in procs
 
 module.exports = Horde
