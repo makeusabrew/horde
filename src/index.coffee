@@ -165,13 +165,13 @@ renderLine = (line, suite) ->
   return if line is ''
 
   try
-    test = JSON.parse line
+    [status, details] = JSON.parse line
   catch e
     #console.log "Could not parse JSON: "+e.toString()
     #console.log line
     return
 
-  [status, details] = test
+  test = {status, details}
 
   switch status
     when "pass"
@@ -186,7 +186,7 @@ renderLine = (line, suite) ->
       if startedSuites is 1
         process.stdout.write "\n"
 
-      process.stdout.write "Starting mocha test suite [#{suite.index}] with #{test[1].total} tests (#{totalTests})\n"
+      process.stdout.write "Starting mocha test suite [#{suite.index}] with #{details.total} tests (#{totalTests})\n"
 
       if startedSuites is maxProcs
         process.stdout.write "\n"
@@ -207,7 +207,6 @@ renderLine = (line, suite) ->
     else
       console.log test
 
-  # @TODO push an object with status/details instead
   suite.results.push test
 
   return status
@@ -255,20 +254,19 @@ writeResults = (results, file, cb) ->
   buffer.push '<testsuite name="Mocha Tests" tests="'+totalStats.tests+'" failures="'+totalStats.failures+'" errors="0" skip="'+totalStats.pending+'" timestamp="'+totalStats.start.toString()+'" time="'+totalStats.secs+'">'
 
   for test in results
-    type = test[0]
-    data = test[1]
+    details = test.details
 
-    if data.fullTitle
-      idx = data.fullTitle.indexOf(data.title)
+    if details.fullTitle
+      idx = details.fullTitle.indexOf(details.title)
       if idx isnt -1
-        fullTitle = data.fullTitle.substr(0, idx-1)
+        fullTitle = details.fullTitle.substr(0, idx-1)
       else
-        fullTitle = data.fullTitle
+        fullTitle = details.fullTitle
     else
       fullTitle = ""
 
-    if data.title
-      title = data.title
+    if details.title
+      title = details.title
     else
       title = ""
 
@@ -278,12 +276,12 @@ writeResults = (results, file, cb) ->
     fullTitle = fullTitle.replace /"/g, ""
     fullTitle = fullTitle.replace /&/g, "&amp;"
 
-    switch type
+    switch test.status
       when "pass"
-        buffer.push '<testcase classname="'+fullTitle+'" name="'+title+'" time="'+(data.duration / 1000)+'"/>'
+        buffer.push '<testcase classname="'+fullTitle+'" name="'+title+'" time="'+(details.duration / 1000)+'"/>'
       when "fail"
-        buffer.push '<testcase classname="'+fullTitle+'" name="'+title+'" time="'+(data.duration / 1000)+'">'
-        buffer.push '<failure classname="'+fullTitle+'" name="'+title+'" time="'+(data.duration / 1000)+'">Test Failed</failure>'
+        buffer.push '<testcase classname="'+fullTitle+'" name="'+title+'" time="'+(details.duration / 1000)+'">'
+        buffer.push '<failure classname="'+fullTitle+'" name="'+title+'" time="'+(details.duration / 1000)+'">Test Failed</failure>'
         buffer.push '</testcase>'
 
   buffer.push '</testsuite>'
