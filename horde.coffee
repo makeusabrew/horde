@@ -127,7 +127,7 @@ runSuite = (suite) ->
   extraArgs    = (file for file in suite.files)
   combinedArgs = baseArgs.concat extraArgs
 
-  console.log "#{suite.index}) Spawning docker instance with #{suite.files.length} test files and approximately #{suite.testCount} tests"
+  console.log "Spawning docker container [#{suite.index}] with approx. #{suite.testCount} tests in #{suite.files.length} files"
   cmd = child_process.spawn "docker", combinedArgs
 
   cmd.stdout.on "data", (d) ->
@@ -203,7 +203,7 @@ renderLine = (line, suite) ->
       if startedSuites is 1
         process.stdout.write "\n"
 
-      process.stdout.write "#{suite.index}) Starting mocha test suite with #{test[1].total} tests (#{totalTests})\n"
+      process.stdout.write "Starting mocha test suite [#{suite.index}] with #{test[1].total} tests (#{totalTests})\n"
 
       if startedSuites is maxProcs
         process.stdout.write "\n"
