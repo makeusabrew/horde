@@ -31,9 +31,9 @@ NodeJS instance.
 ## Why?
 
 Because running large integration suites in parallel - in *my* experience at
-least - can yield **huge** speed increases. A sample suite of 1,050 tests
+least - can yield **huge** speed increases. A sample suite of 1,062 tests
 which previously took 9 minutes 20 seconds to run now executes in 1 minute
-26 seconds - roughly **85%** faster.
+21 seconds - over **85%** faster.
 
 ## Usage
 
