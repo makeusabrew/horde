@@ -249,12 +249,16 @@ finishSuite = ->
   doSummary() if doneSuites is maxProcs
 
 doSummary = ->
-  process.stdout.write "\n\n---\n\n"
+  process.stdout.write "\n\n#{Array(lineLength+1).join("-")}\n\n"
 
   totalStats.end = new Date()
   duration = totalStats.end - totalStats.start
 
   saving = 100 - Math.round( (duration / totalStats.duration) * 100)
+  friendlySaving = "quicker"
+  if saving < 0
+    saving = -saving
+    friendlySaving = "slower"
 
   secs = Math.round duration / 1000
 
@@ -262,7 +266,7 @@ doSummary = ->
 
   serialSecs = Math.round totalStats.duration / 1000
 
-  console.log "#{maxProcs} test suites run in a total of #{secs} seconds, #{saving}% quicker than in serial (#{serialSecs})"
+  console.log "#{maxProcs} test suites run in a total of #{secs} seconds, #{saving}% #{friendlySaving} than in serial (#{serialSecs})\n"
 
   if failures.length
     console.log "Dumping #{failures.length} failures:"
@@ -270,10 +274,9 @@ doSummary = ->
 
   if outputFile
     flatResults = []
-    for suite in suites
-      flatResults = flatResults.concat suite.results
+    flatResults = flatResults.concat suite.results for suite in suites
 
-    console.log "writing test results to #{outputFile}"
+    console.log "Writing test results to #{outputFile}"
     writeResults flatResults, outputFile, doExit
 
 doExit = ->
