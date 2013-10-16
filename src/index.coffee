@@ -85,8 +85,9 @@ doChunk = (
 
   # right, try again - just order the files randomly
   files.sort -> if Math.random() >= 0.5 then -1 else 1
-  return process.nextTick ->
+  return setTimeout ->
     doChunk files, target, done, startTime, timeAllowed, bestDeviation, final
+  , 0
 
 totalStats =
   start: null
