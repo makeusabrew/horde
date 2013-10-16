@@ -23,12 +23,11 @@ RUN perl -pi -e "s#;date.timezone =#date.timezone = Europe/London#g" /etc/php5/a
 RUN apt-get -y install openssh-server
 RUN mkdir /var/run/sshd
 
-# nodejs - from source allows a custom node version
-RUN apt-get install -y git build-essential python
-RUN git clone https://github.com/joyent/node.git /horde/node -b v0.8.14
-RUN cd /horde/node && ./configure
-RUN cd /horde/node && make
-RUN cd /horde/node && make install
+# nodejs - see branch node-from-source to build from source (MUCH slower!)
+RUN apt-get install -y software-properties-common
+RUN add-apt-repository -y ppa:chris-lea/node.js
+RUN apt-get update -y
+RUN apt-get install -y nodejs
 
 # global npm modules
 RUN npm install -g coffee-script
