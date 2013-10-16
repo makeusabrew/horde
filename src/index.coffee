@@ -101,13 +101,14 @@ totalStats =
 
 testResults = {}
 
-runSuites = ->
+runSuites = (done) ->
 
+  # make sure we get the most accurate start time
   totalStats.start = new Date()
 
-  runSuite suite for suite in suites
+  async.forEach suites, runSuite, done
 
-runSuite = (suite) ->
+runSuite = (suite, done) ->
 
   baseArgs     = "run -v #{hostDir}:/var/www #{image} /horde/boot.coffee --reporter json-stream".split(" ")
   extraArgs    = (file for file in suite.files)
@@ -126,7 +127,8 @@ runSuite = (suite) ->
 
       json = zombie[1]
 
-      renderLine json, suite
+      status = renderLine json, suite
+      done() if status is "end"
 
   cmd.stderr.on "data", (d) -> process.stderr.write d
 
@@ -202,19 +204,13 @@ renderLine = (line, suite) ->
       buffer.write symbol
 
       recentlyFinished.push suite.index
-
-      finishSuite()
     else
       console.log test
 
+  # @TODO push an object with status/details instead
   suite.results.push test
 
-
-doneSuites = 0
-finishSuite = ->
-  doneSuites += 1
-
-  doSummary() if doneSuites is maxProcs
+  return status
 
 doSummary = ->
   buffer.moveToEnd()
@@ -333,7 +329,10 @@ Horde =
         chunkTests testFiles, (chunks) ->
           # @TODO suites is global at the mo, ideally it wouldn't be...
           suites = chunks
-          runSuites()
+          runSuites ->
+            # once we're all done, sum up
+            doSummary()
+
   stop: ->
     proc.kill() for proc in procs
 
