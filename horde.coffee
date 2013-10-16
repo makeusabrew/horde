@@ -35,20 +35,27 @@ chunkTests = (files, callback) ->
   sum = 0
   sum += file.testCount for file in files
 
-  # ideally we'd split the number of tests precisely across our number of procs
+  # ideally we'd split the number of tests precisely across our number of procs...
   target = Math.round sum / maxProcs
 
-  # now we want to find out the most efficient way of
+  # ...so we want to find out the most efficient way of
   # chunking the files
+  #
+  # @NOTE this implementation is *awful* and entirely brute force. My lack of
+  # scientific / mathematical background means I'm struggling to know what to
+  # google algorithm wise, but these sound pretty close:
+  # http://en.wikipedia.org/wiki/Partition_problem#The_k-partition_problem
+  # https://www.google.co.uk/search?q=k+partition+problem&oq=k+partition+problem
 
-  timeAllowed = 2000
-  startTime = Date.now()
-  totalRuns = 0
-  bestRun =
-    chunks: []
-    totalDeviation: 9999999
+  timeAllowed   = 2000
+  startTime     = Date.now()
+  bestDeviation = 9e6
+
+  finalSuites = []
 
   doChunk = (done) ->
+
+    # create all the required empty chunks
     chunks = []
     for i in [0...maxProcs]
       chunks.push
@@ -57,29 +64,32 @@ chunkTests = (files, callback) ->
         index: i+1
         results: []
 
+    # iterate through our files dumping them evenly in our available chunks
     for file, i in files
       mod = i % maxProcs
       chunks[mod].files.push file.file
       chunks[mod].testCount += file.testCount
 
+
+    # work out how far away each chunk is from its target and then sum those
+    # deviations
     totalDeviation = 0
     totalDeviation += Math.abs chunk.testCount - target for chunk in chunks
 
-    if totalDeviation < bestRun.totalDeviation
-      bestRun =
-        chunks: chunks
-        totalDeviation: totalDeviation
+    # current best...
+    if totalDeviation < bestDeviation
+      bestDeviation = totalDeviation
+      finalSuites = chunks
 
-    totalRuns += 1
-    endTime = Date.now() - startTime
+    # bail early if we've got no deviation (perfect) or we've taken too long
+    if bestDeviation is 0 or (Date.now() - startTime) >= timeAllowed
 
-    if endTime >= timeAllowed or bestRun.totalDeviation is 0
+      avgDeviation = Math.round bestDeviation / maxProcs
+      console.log "Best average deviation of #{avgDeviation} (total: #{bestDeviation})\n"
 
-      avgDeviation = Math.round bestRun.totalDeviation / maxProcs
-      console.log "Managed #{totalRuns} runs. Best total deviation of #{bestRun.totalDeviation} (avg: #{avgDeviation})\n"
+      return done finalSuites
 
-      return done bestRun.chunks
-
+    # right, try again - just order the files randomly
     files.sort -> if Math.random() >= 0.5 then -1 else 1
     process.nextTick -> doChunk done
 
