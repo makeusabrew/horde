@@ -127,7 +127,6 @@ runSuite = (suite) ->
   extraArgs    = (file for file in suite.files)
   combinedArgs = baseArgs.concat extraArgs
 
-  #console.log "spawning docker " + combinedArgs.join(" ")
   console.log "#{suite.index}) Spawning docker instance with #{suite.files.length} test files and approximately #{suite.testCount} tests"
   cmd = child_process.spawn "docker", combinedArgs
 
@@ -152,16 +151,6 @@ runSuite = (suite) ->
     console.log "EXIT", code
 
   procs.push cmd
-
-process.on "SIGINT", ->
-  console.log "\nCaught SIGINT, killing docker processes and exiting..."
-
-  # ideally triggering this would then trigger our on. "exit" handlers,
-  # but see the note inside that callback
-  proc.kill() for proc in procs
-
-  # so we have to forcefully exit (not ideal)
-  process.exit 0
 
 testChars  = 0
 lineLength = 50
@@ -333,3 +322,13 @@ writeResults = (results, file, cb) ->
   fs.writeFile file, buffer.join("\n"), (err) ->
     throw err if err
     cb()
+
+process.on "SIGINT", ->
+  console.log "\nCaught SIGINT, killing docker processes and exiting..."
+
+  # ideally triggering this would then trigger our on. "exit" handlers,
+  # but see the note inside that callback
+  proc.kill() for proc in procs
+
+  # so we have to forcefully exit (not ideal)
+  process.exit 0
