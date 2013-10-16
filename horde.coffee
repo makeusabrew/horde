@@ -154,8 +154,13 @@ runSuite = (suite) ->
   procs.push cmd
 
 process.on "SIGINT", ->
-  console.log "SIGINT"
+  console.log "\nCaught SIGINT, killing docker processes and exiting..."
+
+  # ideally triggering this would then trigger our on. "exit" handlers,
+  # but see the note inside that callback
   proc.kill() for proc in procs
+
+  # so we have to forcefully exit (not ideal)
   process.exit 0
 
 testChars  = 0
