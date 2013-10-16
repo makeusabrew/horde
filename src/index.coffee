@@ -61,7 +61,7 @@ doChunk = (
   # iterate through our files dumping them evenly in our available chunks
   for file, i in files
     mod = i % maxProcs
-    chunks[mod].files.push file.file
+    chunks[mod].files.push file.path
     chunks[mod].testCount += file.testCount
 
 
@@ -308,7 +308,7 @@ getTestCount = (files, done) ->
       matches = data.toString().match /it ".+", ->/g
 
       testFiles.push
-        file: item
+        path: item
         testCount: matches.length
 
       callback()
