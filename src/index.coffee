@@ -1,10 +1,8 @@
-#!/usr/bin/env coffee
-#
 child_process = require "child_process"
 async         = require "async"
 fs            = require "fs"
 
-Buffer = require "./src/buffer"
+Buffer = require "./buffer"
 
 # store an array of child processes
 procs = []
@@ -17,20 +15,6 @@ hostDir    = process.argv[2]
 image      = process.argv[3]
 
 suites = []
-
-child_process.exec "ls -lah #{hostDir}/test/*.coffee", (err, stdout, stderr) ->
-  lines = stdout.split "\n"
-  files = []
-
-  for line in lines
-    # @TODO JS support
-    matches = line.match /(test\/.+\.coffee$)/
-    files.push matches[1] if matches
-
-  async.forEach files, getTestCount, (err) ->
-    chunkTests testFiles, (chunks) ->
-      suites = chunks
-      runSuites()
 
 chunkTests = (files, callback) ->
 
@@ -327,12 +311,22 @@ writeResults = (results, file, cb) ->
     throw err if err
     cb()
 
-process.on "SIGINT", ->
-  console.log "\nCaught SIGINT, killing docker processes and exiting..."
+Horde =
+  start: ->
+    child_process.exec "ls -lah #{hostDir}/test/*.coffee", (err, stdout, stderr) ->
+      lines = stdout.split "\n"
+      files = []
 
-  # ideally triggering this would then trigger our on. "exit" handlers,
-  # but see the note inside that callback
-  proc.kill() for proc in procs
+      for line in lines
+        # @TODO JS support
+        matches = line.match /(test\/.+\.coffee$)/
+        files.push matches[1] if matches
 
-  # so we have to forcefully exit (not ideal)
-  process.exit 0
+      async.forEach files, getTestCount, (err) ->
+        chunkTests testFiles, (chunks) ->
+          suites = chunks
+          runSuites()
+    stop: ->
+      proc.kill() for proc in procs
+
+module.exports = Horde

@@ -1,0 +1,16 @@
+#!/usr/bin/env coffee
+Horde = require "../index"
+
+process.on "SIGINT", ->
+  console.log "\nCaught SIGINT, killing docker processes and exiting..."
+
+  # ideally triggering this would then trigger our on. "exit" handlers,
+  # but see the note inside that callback
+  Horde.stop()
+
+  # so we have to forcefully exit (not ideal)
+  process.exit 0
+
+# unleash the horde!
+
+Horde.start()
