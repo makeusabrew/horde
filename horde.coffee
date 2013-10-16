@@ -4,6 +4,8 @@ child_process = require "child_process"
 async         = require "async"
 fs            = require "fs"
 
+Buffer = require "./src/buffer"
+
 # store an array of child processes
 procs = []
 
@@ -152,27 +154,11 @@ runSuite = (suite) ->
 
   procs.push cmd
 
-testChars  = 0
-lineLength = 50
-buffered   = true
-buffer     = ""
+buffer = new Buffer stream: process.stdout, lineLength: 50
 
-writeChar = (char) ->
-  if buffered
-    buffer += char
-  else
-    process.stdout.write char
-
-  if testChars % lineLength is lineLength-1
-    pc = Math.round((testChars / totalTests) * 100)
-    process.stdout.write " (~#{pc}%) \n"
-
-  testChars +=1
-
-flushBuffer = ->
-  process.stdout.write buffer
-  buffer = ""
-  buffered = false
+buffer.on "endline", (length) ->
+  pc = Math.round((length / totalTests) * 100)
+  buffer.append " (~#{pc}%)"
 
 totalTests    = 0
 startedSuites = 0
@@ -192,10 +178,10 @@ renderLine = (line, suite) ->
 
   switch status
     when "pass"
-      writeChar "."
+      buffer.write "."
     when "fail"
       failures.push test
-      writeChar "F"
+      buffer.write "F"
     when "start"
       startedSuites += 1
       totalTests += details.total
@@ -207,7 +193,7 @@ renderLine = (line, suite) ->
 
       if startedSuites is maxProcs
         process.stdout.write "\n"
-        flushBuffer()
+        buffer.flush()
 
     when "end"
       totalStats.suites   += details.suites
@@ -218,7 +204,7 @@ renderLine = (line, suite) ->
       totalStats.pending  += details.pending
 
       symbol = if details.failures is 0 then "✓" else "✗"
-      writeChar symbol
+      buffer.write symbol
 
       finishSuite()
     else
@@ -249,7 +235,7 @@ finishSuite = ->
   doSummary() if doneSuites is maxProcs
 
 doSummary = ->
-  process.stdout.write "\n\n#{Array(lineLength+1).join("-")}\n\n"
+  process.stdout.write "\n\n#{Array(buffer.lineLength+1).join("-")}\n\n"
 
   totalStats.end = new Date()
   duration = totalStats.end - totalStats.start
