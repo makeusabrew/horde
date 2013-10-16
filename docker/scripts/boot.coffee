@@ -15,8 +15,8 @@ spawn = (name, cmd, params = [], options) ->
   return proc
 
 #spawn "network", "ip", ["addr", "show", "eth0"]
-spawn "mysqld", "/usr/bin/mysqld_safe"
-spawn "apached", "/horde/start-apache.sh"
+spawn "mysqld", "/horde/start-mysql"
+spawn "apached", "/horde/start-apache"
 spawn "sshd", "/usr/sbin/sshd", ["-D"]
 
 setTimeout ->
