@@ -2,18 +2,23 @@
 
 child_process = require "child_process"
 
-procs = []
+procs = {}
+spawnedProcs = 0
 
 spawn = (name, cmd, params = [], options) ->
   proc = child_process.spawn cmd, params, options
 
+  spawnedProcs += 1
+
+  procs[name] = proc
+
   proc.stdout.on "data", (data) -> process.stdout.write "[#{name}] #{data}"
   proc.stderr.on "data", (data) -> process.stderr.write "[#{name}] #{data}"
-
-  procs.push proc
-
-  return proc
-
+  proc.on "exit", (code) ->
+    process.stdout.write "[#{name}] exit #{code}"
+    spawnedProcs -= 1
+    if spawnedProcs is 0
+      process.exit 0
 
 checkMysql = ->
   child_process.exec "mysql -uroot -e ''", (err, stdout, stderr) ->
@@ -30,15 +35,15 @@ runTests = ->
     env: process.env
 
   args = process.argv[2..]
-  proc = spawn "zombie", "./node_modules/mocha/bin/_mocha", args, options
+  spawn "zombie", "./node_modules/mocha/bin/_mocha", args, options
 
-  proc.on "exit", (code) ->
-    process.stdout.write "[zombie] process exited with code #{code} - exiting in parent"
-    process.exit code
+  procs.zombie.on "exit", (code) ->
+    procs.mysqld.kill()
+    procs.apached.kill()
 
 #spawn "network", "ip", ["addr", "show", "eth0"]
 spawn "mysqld", "/horde/start-mysql"
 spawn "apached", "/horde/start-apache"
-spawn "sshd", "/usr/sbin/sshd", ["-D"]
+#spawn "sshd", "/usr/sbin/sshd", ["-D"]
 
 checkMysql()
