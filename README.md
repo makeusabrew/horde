@@ -75,7 +75,7 @@ fixtures can be run.
 
 ### Assumptions
 
-Since our containers spawn a completely isolated LAMP stack, they make a couple of
+Since our containers spawn a completely isolated LAMP stack, they make a few
 key assumptions:
 
 * the source directory you provide when running the horde script (discussed later)
@@ -117,7 +117,8 @@ The two required parameters are `--source` and `--config`:
 
 This **must** be an absolute path to a project which itself contains
 a `test/` directory, i.e. one should be able to run `mocha` from within
-`--source` and expect it to run and find some appropriate tests.
+`--source` and expect it to run and find some appropriate tests. This
+directory be mounted within each container as `/var/www`.
 
 ### --config
 
@@ -125,6 +126,24 @@ This **must** be an absolute path to a directory which contains the
 aforementioned `default.conf` apache configuration file. If it
 contains a `schema.sql` this will be run against the MySQL server
 within each container upon initialisation.
+
+### Optional parameters
+
+#### --procs
+
+This controls how many docker containers to spawn and is limited only
+by your host machine and the complexity of your test suite. Experiment!
+My sample suite seems to work well with up to 20 containers on a Quad Core,
+16Gb Linux machine, but any more and tests start failing unpredictably.
+
+#### --output
+
+If present this controls where the combined results of all test suites
+will be written to in JUnit compatible (e.g. CI friendly) XML.
+
+#### --image
+
+If you've built your own custom horde image you can pass it here.
 
 ## Sample output
 
