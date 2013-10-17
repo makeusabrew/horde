@@ -1,5 +1,6 @@
 child_process = require "child_process"
 fs            = require "fs"
+path          = require "path"
 async         = require "async"
 program       = require "commander"
 
@@ -12,7 +13,7 @@ program
   .option("-p, --procs <n>", "Number of containers to spawn [4]", parseInt, 4)
   .option("-o, --output [file]", "XML file to write JUnit results to")
   .option("-s, --source [dir]", "Source directory to mount")
-  .option("-c, --config [dir]", "Configuration directory to mount")
+  .option("-c, --config [dir]", "Configuration directory to mount [--source/horde]")
   .option("-i, --image [image]", "Docker image to use [makeusabrew/horde]", "makeusabrew/horde")
   .parse process.argv
 
@@ -20,8 +21,14 @@ maxProcs = program.procs
 hostDir  = program.source
 config   = program.config
 
-throw "Please supply a --config directory" if not config
-# @todo check conf directory has the right files too
+if not config
+  configPath = path.join(hostDir, "horde/")
+
+  if not fs.existsSync configPath
+    throw "Please supply a --config directory"
+
+  console.log "Assuming --config should be read from #{configPath}"
+  config = configPath
 
 suites = []
 
@@ -41,7 +48,7 @@ chunkTests = (files, callback) ->
   # http://en.wikipedia.org/wiki/Partition_problem#The_k-partition_problem
   # https://www.google.co.uk/search?q=k+partition+problem&oq=k+partition+problem
 
-  console.log "Attempting to fetch optimum suite distribution, please wait..."
+  console.log "Fetching optimum suite distribution for #{maxProcs} containers, please wait..."
 
   # first pass, we chunk by number of tests, highest -> lowest
   files.sort (a, b) -> return b.testCount - a.testCount
