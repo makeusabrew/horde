@@ -1,5 +1,5 @@
 #!/usr/bin/env coffee
-Horde = require "../index"
+Horde = require "../index.coffee"
 
 process.on "SIGINT", ->
   console.log "\nCaught SIGINT, killing docker processes and exiting..."

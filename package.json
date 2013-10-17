@@ -3,7 +3,8 @@
   "version": "0.0.0",
   "description": "Unleash the horde!",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prepublish": "grunt compile"
   },
   "repository": "",
   "author": "Nick Payne <nick@kurai.co.uk>",
@@ -11,5 +12,8 @@
   "dependencies": {
     "async": "~0.2.9",
     "commander": "~2.0.0"
+  },
+  "devDependencies": {
+    "grunt": "~0.4.1"
   }
 }
