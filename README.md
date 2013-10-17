@@ -52,7 +52,7 @@ which previously took 9 minutes 20 seconds to run now executes in 1 minute
 
 ## Configuration (LAMP environment setup)
 
-In order to make the `makeusabrew/horde` docker image reusable you'll need
+In order to make the `makeusabrew/horde` docker image reusable you need
 to give it a hand by creating a couple of configuration files it'll look for
 upon initialisation: one for MySQL and one for Apache. For the time being
 these configuration files *must* live in the same directory *and* match specific
