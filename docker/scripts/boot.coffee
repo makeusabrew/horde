@@ -14,16 +14,17 @@ spawn = (name, cmd, params = [], options) ->
 
   return proc
 
-#spawn "network", "ip", ["addr", "show", "eth0"]
-spawn "mysqld", "/horde/start-mysql"
-spawn "apached", "/horde/start-apache"
-spawn "sshd", "/usr/sbin/sshd", ["-D"]
 
-setTimeout ->
-  runTests()
-, 2000
+checkMysql = ->
+  child_process.exec "mysql -uroot -e ''", (err, stdout, stderr) ->
+    ready = stderr.search(/ERROR/) is -1
+
+    return runTests() if ready
+
+    setTimeout checkMysql, 250
 
 runTests = ->
+
   options =
     cwd: "/var/www"
     env: process.env
@@ -34,3 +35,10 @@ runTests = ->
   proc.on "exit", (code) ->
     process.stdout.write "[zombie] process exited with code #{code} - exiting in parent"
     process.exit code
+
+#spawn "network", "ip", ["addr", "show", "eth0"]
+spawn "mysqld", "/horde/start-mysql"
+spawn "apached", "/horde/start-apache"
+spawn "sshd", "/usr/sbin/sshd", ["-D"]
+
+checkMysql()
