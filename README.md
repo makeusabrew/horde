@@ -91,6 +91,7 @@ These assumptions mean that:
 * your `default.conf` file should specify any relevant directives with `/var/www`
   as the root. For example, if you have a 'public' folder which is typically your
   document root, instead of `DocumentRoot /path/to/myproject/public`, use `/var/www/public`
+  instead
 * your site's test configuration should point to a database named `horde_test`, accessed
   by user `root` with no password (or a blank password)
 * if your site generates absolute URLs, the host name in test mode should be `localhost`
@@ -119,7 +120,7 @@ The only required parameter is `--source`:
 This **must** be an absolute path to a project which itself contains
 a `test/` directory, i.e. one should be able to run `mocha` from within
 `--source` and expect it to run and find some appropriate tests. This
-directory be mounted within each container as `/var/www`.
+directory will be mounted within each container as `/var/www`.
 
 
 ### Optional parameters
@@ -160,6 +161,12 @@ If you've built your own custom horde image you can pass it here.
 ## Sample output
 
 ```
+$ ./bin/horde -s /var/www/nick/myproject -o output.xml -p 8
+[WARN] No config option supplied, checking to see if /var/www/nick/myproject/horde/ exists...
+[INFO] Using /var/www/nick/myproject/horde/ as config directory
+[INFO] Found apache configuration file
+[INFO] Found MySQL schema file
+
 Attempting to fetch optimum suite distribution, please wait...
 Best average deviation of 6 (total: 44)
 
