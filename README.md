@@ -44,7 +44,7 @@ which previously took 9 minutes 20 seconds to run now executes in 1 minute
 
 ### Horde
 
-* pull down the horde docker image: `docker pull makeusabrew/horde`
+* pull down the horde [docker image](https://index.docker.io/u/makeusabrew/horde/): `docker pull makeusabrew/horde`
 * clone this repository
 * run `npm install`
 * run `npm install -g coffee-script` if you don't already have it
@@ -91,7 +91,6 @@ These assumptions mean that:
 * your `default.conf` file should specify any relevant directives with `/var/www`
   as the root. For example, if you have a 'public' folder which is typically your
   document root, instead of `DocumentRoot /path/to/myproject/public`, use `/var/www/public`
-  instead
 * your site's test configuration should point to a database named `horde_test`, accessed
   by user `root` with no password (or a blank password)
 * if your site generates absolute URLs, the host name in test mode should be `localhost`
@@ -113,23 +112,21 @@ $ ./bin/horde --help
     -i, --image [image]  Docker image to use [makeusabrew/horde]
 ```
 
-The only required parameter is `--source`:
-
 ### --source
 
-This **must** be an absolute path to a project which itself contains
+**Default:** `process.cwd()`
+
+An absolute path to a project which itself contains
 a `test/` directory, i.e. one should be able to run `mocha` from within
 `--source` and expect it to run and find some appropriate tests. This
 directory will be mounted within each container as `/var/www`.
 
 
-### Optional parameters
-
 ### --config
 
 **Default:** `horde/` sub directory of `--source` option
 
-If supplied this **must** be an absolute path to a directory containing
+An absolute path to a directory containing
 the aforementioned `default.conf` apache configuration file. If it
 contains a `schema.sql` this will be run against the MySQL server
 within each container upon initialisation. This directory can live
@@ -148,6 +145,8 @@ My sample suite seems to work well with up to 20 containers on a Quad Core,
 16Gb Linux machine, but any more and tests start failing unpredictably.
 
 #### --output
+
+**Default:** N/A
 
 If present this controls where the combined results of all test suites
 will be written to in JUnit compatible (e.g. CI friendly) XML.

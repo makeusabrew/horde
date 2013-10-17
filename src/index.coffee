@@ -12,7 +12,7 @@ procs = []
 program
   .option("-p, --procs <n>", "Number of containers to spawn [4]", parseInt, 4)
   .option("-o, --output [file]", "XML file to write JUnit results to")
-  .option("-s, --source [dir]", "Source directory to mount")
+  .option("-s, --source [dir]", "Source directory to mount [process.cwd()]")
   .option("-c, --config [dir]", "Configuration directory to mount [--source/horde]")
   .option("-i, --image [image]", "Docker image to use [makeusabrew/horde]", "makeusabrew/horde")
   .parse process.argv
@@ -21,10 +21,14 @@ maxProcs = program.procs
 hostDir  = program.source
 config   = program.config
 
+if not hostDir
+  hostDir = process.cwd()
+  console.log "[INFO] No source option supplied, using current working directory..."
+
 if not config
   configPath = path.join(hostDir, "horde/")
 
-  console.warn "[WARN] No config option supplied, checking to see if #{configPath} exists..."
+  console.log "[INFO] No config option supplied, checking to see if #{configPath} exists..."
 
   if not fs.existsSync configPath
     console.error "[ERROR] Please supply a valid --config directory"
