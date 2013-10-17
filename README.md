@@ -107,11 +107,11 @@ $ ./bin/horde --help
     -p, --procs <n>      Number of containers to spawn [4]
     -o, --output [file]  XML file to write JUnit results to
     -s, --source [dir]   Source directory to mount
-    -c, --config [dir]   Configuration directory to mount
+    -c, --config [dir]   Configuration directory to mount [--source/horde]
     -i, --image [image]  Docker image to use [makeusabrew/horde]
 ```
 
-The two required parameters are `--source` and `--config`:
+The only required parameter is `--source`:
 
 ### --source
 
@@ -120,16 +120,25 @@ a `test/` directory, i.e. one should be able to run `mocha` from within
 `--source` and expect it to run and find some appropriate tests. This
 directory be mounted within each container as `/var/www`.
 
-### --config
-
-This **must** be an absolute path to a directory which contains the
-aforementioned `default.conf` apache configuration file. If it
-contains a `schema.sql` this will be run against the MySQL server
-within each container upon initialisation.
 
 ### Optional parameters
 
+### --config
+
+**Default:** `horde/` sub directory of `--source` option
+
+If supplied this **must** be an absolute path to a directory containing
+the aforementioned `default.conf` apache configuration file. If it
+contains a `schema.sql` this will be run against the MySQL server
+within each container upon initialisation. This directory can live
+anywhere but since it'll probably be specific to the project you're
+testing it's advisable to keep it there, hence why the `horde/` sub
+directory is checked first.
+
+
 #### --procs
+
+**Default:** 4
 
 This controls how many docker containers to spawn and is limited only
 by your host machine and the complexity of your test suite. Experiment!
@@ -142,6 +151,8 @@ If present this controls where the combined results of all test suites
 will be written to in JUnit compatible (e.g. CI friendly) XML.
 
 #### --image
+
+**Default:** makeusabrew/horde
 
 If you've built your own custom horde image you can pass it here.
 
