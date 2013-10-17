@@ -35,13 +35,119 @@ least - can yield **huge** speed increases. A sample suite of 1,062 tests
 which previously took 9 minutes 20 seconds to run now executes in 1 minute
 21 seconds - over **85%** faster.
 
-## Usage
+## Getting started
 
-Coming soon.
+### Docker
+
+* install [docker](http://www.docker.io/gettingstarted/#h_installation) if you haven't already
+* add your user to the `docker` group so you don't have to keep running every docker command with `sudo`
+
+### Horde
+
+* pull down the horde docker image: `docker pull makeusabrew/horde`
+* clone this repository
+* run `npm install`
+* run `npm install -g coffee-script` if you don't already have it
+
+
+## Configuration (LAMP environment setup)
+
+In order to make the `makeusabrew/horde` docker image reusable you'll need
+to give it a hand by creating a couple of configuration files it'll look for
+upon initialisation: one for MySQL and one for Apache. For the time being
+these configuration files *must* live in the same directory *and* match specific
+filenames so that the horde image can find them. This directory can live anywhere
+but since it'll probably be specific to the project you're testing it's advisable
+to keep it there, perhaps under a `horde/` directory.
+
+### default.conf
+
+This is the apache configuration file needed in order to run your site. At run time
+it'll be linked as the *only* file in `/etc/apache2/sites-enabled/` and as
+such will act as the container's default (and only) host. In my usage so far this
+has amounted to a single `VirtualHost` entry adapted from the site I'm testing.
+
+### schema.sql (optional)
+
+If present, this file will be run once upon container initialisation. It allows you
+to initialise the test database with a clean schema against which your test
+fixtures can be run.
+
+### Assumptions
+
+Since our containers spawn a completely isolated LAMP stack, they make a few
+key assumptions:
+
+* the source directory you provide when running the horde script (discussed later)
+  will be mounted as `/var/www` (e.g. Apache's default document root)
+* the schema you provide will be run against `horde_test` as `root` with **no password**
+* we don't inject any `/etc/hosts` entries into the container, but as your site is
+  the only one available it'll respond to requests (from within the container) to
+  `http://localhost`
+
+These assumptions mean that:
+
+* your `default.conf` file should assume specify any relevant directives with `/var/www`
+  as the root. For example, if you have a 'public' folder which is typically your
+  document root, instead of `DocumentRoot /path/to/myproject/public`, use `/var/www/public`
+* your site's test configuration should point to a database named `horde_test`, accessed
+  by user `root` with no password (or a blank password)
+* if your site generates absolute URLs, the host name in test mode should be `localhost`
+
+## Unleashing
+
+```
+$ ./bin/horde --help
+
+  Usage: horde [options]
+
+  Options:
+
+    -h, --help           output usage information
+    -p, --procs <n>      Number of containers to spawn [4]
+    -o, --output [file]  XML file to write JUnit results to
+    -s, --source [dir]   Source directory to mount
+    -c, --config [dir]   Configuration directory to mount
+    -i, --image [image]  Docker image to use [makeusabrew/horde]
+```
+
+The two required parameters are `--source` and `--config`:
+
+### --source
+
+This **must** be an absolute path to a project which itself contains
+a `test/` directory, i.e. one should be able to run `mocha` from within
+`--source` and expect it to run and find some appropriate tests. This
+directory be mounted within each container as `/var/www`.
+
+### --config
+
+This **must** be an absolute path to a directory which contains the
+aforementioned `default.conf` apache configuration file. If it
+contains a `schema.sql` this will be run against the MySQL server
+within each container upon initialisation.
+
+### Optional parameters
+
+#### --procs
+
+This controls how many docker containers to spawn and is limited only
+by your host machine and the complexity of your test suite. Experiment!
+My sample suite seems to work well with up to 20 containers on a Quad Core,
+16Gb Linux machine, but any more and tests start failing unpredictably.
+
+#### --output
+
+If present this controls where the combined results of all test suites
+will be written to in JUnit compatible (e.g. CI friendly) XML.
+
+#### --image
+
+If you've built your own custom horde image you can pass it here.
 
 ## Sample output
+
 ```
-$ ./bin/horde /var/www/nick/myproject makeusabrew/horde output.xml 8
 Attempting to fetch optimum suite distribution, please wait...
 Best average deviation of 6 (total: 44)
 
