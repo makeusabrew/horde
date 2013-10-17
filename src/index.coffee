@@ -9,48 +9,6 @@ Buffer = require "./buffer"
 # store an array of child processes
 procs = []
 
-program
-  .option("-p, --procs <n>", "Number of containers to spawn [4]", parseInt, 4)
-  .option("-o, --output [file]", "XML file to write JUnit results to")
-  .option("-s, --source [dir]", "Source directory to mount [process.cwd()]")
-  .option("-c, --config [dir]", "Configuration directory to mount [--source/horde]")
-  .option("-i, --image [image]", "Docker image to use [makeusabrew/horde]", "makeusabrew/horde")
-  .parse process.argv
-
-maxProcs = program.procs
-hostDir  = program.source
-config   = program.config
-
-if not hostDir
-  hostDir = process.cwd()
-  console.log "[INFO] No source option supplied, using current working directory..."
-
-if not config
-  configPath = path.join(hostDir, "horde/")
-
-  console.log "[INFO] No config option supplied, checking to see if #{configPath} exists..."
-
-  if not fs.existsSync configPath
-    console.error "[ERROR] Please supply a valid --config directory"
-    process.exit 1
-
-  config = configPath
-
-console.log "[INFO] Using #{configPath} as config directory"
-
-if not fs.existsSync path.join(configPath, "default.conf")
-  console.error "[ERROR] Apache configuration file default.conf not found"
-  process.exit 1
-
-console.log "[INFO] Found apache configuration file"
-
-if not fs.existsSync path.join(configPath, "schema.sql")
-  console.error "[INFO] Proceeding without MySQL schema file schema.sql"
-else
-  console.log "[INFO] Found MySQL schema file"
-
-console.log ""
-
 suites = []
 
 chunkTests = (files, callback) ->
@@ -58,7 +16,7 @@ chunkTests = (files, callback) ->
   sum = (f.testCount for f in files).reduce (a, b) -> a + b
 
   # ideally we'd split the number of tests precisely across our number of procs...
-  target = Math.round sum / maxProcs
+  target = Math.round sum / program.procs
 
   # ...so we want to find out the most efficient way of
   # chunking the files
@@ -69,7 +27,7 @@ chunkTests = (files, callback) ->
   # http://en.wikipedia.org/wiki/Partition_problem#The_k-partition_problem
   # https://www.google.co.uk/search?q=k+partition+problem&oq=k+partition+problem
 
-  console.log "Fetching optimum suite distribution for #{maxProcs} containers, please wait..."
+  console.log "Fetching optimum suite distribution for #{program.procs} containers, please wait..."
 
   # first pass, we chunk by number of tests, highest -> lowest
   files.sort (a, b) -> return b.testCount - a.testCount
@@ -88,7 +46,7 @@ doChunk = (
 
   # create all the required empty chunks
   chunks = []
-  for i in [0...maxProcs]
+  for i in [0...program.procs]
     chunks.push
       files: []
       testCount: 0
@@ -97,7 +55,7 @@ doChunk = (
 
   # iterate through our files dumping them evenly in our available chunks
   for file, i in files
-    mod = i % maxProcs
+    mod = i % program.procs
     chunks[mod].files.push file.path
     chunks[mod].testCount += file.testCount
 
@@ -115,7 +73,7 @@ doChunk = (
   # bail early if we've got no deviation (perfect) or we've taken too long
   if bestDeviation is 0 or (Date.now() - startTime) >= timeAllowed
 
-    avgDeviation = Math.round bestDeviation / maxProcs
+    avgDeviation = Math.round bestDeviation / program.procs
     console.log "Best average deviation of #{avgDeviation} (total: #{bestDeviation})\n"
 
     return done final
@@ -149,8 +107,8 @@ runSuites = (done) ->
 runSuite = (suite, done) ->
 
   baseArgs = "run" +
-    " -v #{hostDir}:/var/www" +   # mount source directory into container's /var/www
-    " -v #{config}:/horde/conf" + # mount configuration directory
+    " -v #{program.source}:/var/www" +   # mount source directory into container's /var/www
+    " -v #{program.config}:/horde/conf" + # mount configuration directory
     " #{program.image} /horde/boot.coffee --reporter json-stream"
   extraArgs    = (file for file in suite.files)
   combinedArgs = [].concat baseArgs.split(" "), extraArgs
@@ -175,7 +133,7 @@ runSuite = (suite, done) ->
 
   procs.push cmd
 
-  if procs.length is maxProcs
+  if procs.length is program.procs
     console.log "\nPlease wait while your containers start MySQL and Apache..."
 
 recentlyFinished = []
@@ -228,7 +186,7 @@ renderLine = (line, suite) ->
 
       process.stdout.write "Starting mocha test suite [#{suite.index}] with #{details.total} tests (#{totalTests})\n"
 
-      if startedSuites is maxProcs
+      if startedSuites is program.procs
         process.stdout.write "\n"
         buffer.flush()
 
@@ -271,7 +229,7 @@ doSummary = ->
 
   serialSecs = Math.round totalStats.duration / 1000
 
-  console.log "#{maxProcs} test suites run in a total of #{secs} seconds, #{saving}% #{friendlySaving} than in serial (#{serialSecs})\n"
+  console.log "#{program.procs} test suites run in a total of #{secs} seconds, #{saving}% #{friendlySaving} than in serial (#{serialSecs})\n"
 
   if failures.length
     console.log "Dumping #{failures.length} failures:"
@@ -282,7 +240,9 @@ doSummary = ->
     flatResults = flatResults.concat suite.results for suite in suites
 
     console.log "Writing test results to #{program.output}"
-    writeResults flatResults, program.output, doExit
+    return writeResults flatResults, program.output, doExit
+
+  doExit()
 
 doExit = ->
   returnCode = if failures.length is 0 then 0 else 1
@@ -333,7 +293,7 @@ writeResults = (results, file, cb) ->
 getTestCount = (files, done) ->
   testFiles = []
   async.forEach files, (item, callback) ->
-    fs.readFile "#{hostDir}/#{item}", (err, data) ->
+    fs.readFile "#{program.source}/#{item}", (err, data) ->
       throw err if err
 
       # we take the number of it "...", -> expectations as a rough indicator
@@ -352,7 +312,45 @@ getTestCount = (files, done) ->
 
 Horde =
   start: ->
-    child_process.exec "ls -lah #{hostDir}/test/*.coffee", (err, stdout, stderr) ->
+    program
+      .option("-p, --procs <n>", "Number of containers to spawn [4]", parseInt, 4)
+      .option("-o, --output [file]", "XML file to write JUnit results to")
+      .option("-s, --source [dir]", "Source directory to mount [process.cwd()]")
+      .option("-c, --config [dir]", "Configuration directory to mount [--source/horde]")
+      .option("-i, --image [image]", "Docker image to use [makeusabrew/horde]", "makeusabrew/horde")
+      .parse process.argv
+
+    if not program.source
+      program.source = process.cwd()
+      console.log "[INFO] No source option supplied, using current working directory..."
+
+    if not program.config
+      configPath = path.join(program.source, "horde/")
+
+      console.log "[INFO] No config option supplied, checking to see if #{configPath} exists..."
+
+      if not fs.existsSync configPath
+        console.error "[ERROR] Please supply a valid --config directory"
+        process.exit 1
+
+      program.config = configPath
+
+      console.log "[INFO] Using #{configPath} as config directory"
+
+    if not fs.existsSync path.join(configPath, "default.conf")
+      console.error "[ERROR] Apache configuration file default.conf not found"
+      process.exit 1
+
+    console.log "[INFO] Found apache configuration file"
+
+    if not fs.existsSync path.join(configPath, "schema.sql")
+      console.error "[INFO] Proceeding without MySQL schema file schema.sql"
+    else
+      console.log "[INFO] Found MySQL schema file"
+
+    console.log ""
+
+    child_process.exec "ls -lah #{program.source}/test/*.coffee", (err, stdout, stderr) ->
       lines = stdout.split "\n"
       files = []
 
