@@ -1,18 +1,27 @@
 child_process = require "child_process"
-async         = require "async"
 fs            = require "fs"
+async         = require "async"
+program       = require "commander"
 
 Buffer = require "./buffer"
 
 # store an array of child processes
 procs = []
 
-# @TODO validation around user input
-# might as well use commander or similar
-maxProcs   = +process.argv[5]
-outputFile = process.argv[4]
-hostDir    = process.argv[2]
-image      = process.argv[3]
+program
+  .option("-p, --procs <n>", "Number of processes to spawn", parseInt, 4)
+  .option("-o, --output [file]", "XML file to write JUnit results to")
+  .option("-s, --source [dir]", "Source directory")
+  .option("-i, --image [image]", "Docker image to use", "makeusabrew/horde")
+  .option("-c, --config [dir]", "Configuration directory to mount")
+  .parse process.argv
+
+maxProcs = program.procs
+hostDir  = program.source
+config   = program.config
+
+throw "Please supply a --config directory" if not config
+# @todo check conf directory has the right files too
 
 suites = []
 
@@ -111,9 +120,12 @@ runSuites = (done) ->
 
 runSuite = (suite, done) ->
 
-  baseArgs     = "run -v #{hostDir}:/var/www #{image} /horde/boot.coffee --reporter json-stream".split(" ")
+  baseArgs = "run" +
+    " -v #{hostDir}:/var/www" +   # mount source directory into container's /var/www
+    " -v #{config}:/horde/conf" + # mount configuration directory
+    " #{program.image} /horde/boot.coffee --reporter json-stream"
   extraArgs    = (file for file in suite.files)
-  combinedArgs = baseArgs.concat extraArgs
+  combinedArgs = [].concat baseArgs.split(" "), extraArgs
 
   console.log "Spawning docker container [#{suite.index}] with approx. #{suite.testCount} tests in #{suite.files.length} files"
   cmd = child_process.spawn "docker", combinedArgs
@@ -169,6 +181,8 @@ renderLine = (line, suite) ->
   test = {status, details}
 
   switch status
+    when "message"
+      process.stdout.write details
     when "pass"
       buffer.write "."
     when "fail"
@@ -232,12 +246,12 @@ doSummary = ->
     console.log "Dumping #{failures.length} failures:"
     console.log failures
 
-  if outputFile
+  if program.output
     flatResults = []
     flatResults = flatResults.concat suite.results for suite in suites
 
-    console.log "Writing test results to #{outputFile}"
-    writeResults flatResults, outputFile, doExit
+    console.log "Writing test results to #{program.output}"
+    writeResults flatResults, program.output, doExit
 
 doExit = ->
   returnCode = if failures.length is 0 then 0 else 1

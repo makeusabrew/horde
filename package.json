@@ -9,6 +9,7 @@
   "author": "Nick Payne <nick@kurai.co.uk>",
   "license": "MIT",
   "dependencies": {
-    "async": "~0.2.9"
+    "async": "~0.2.9",
+    "commander": "~2.0.0"
   }
 }

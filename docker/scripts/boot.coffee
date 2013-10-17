@@ -1,9 +1,13 @@
 #!/usr/bin/env coffee
 
 child_process = require "child_process"
+fs            = require "fs"
 
 procs = {}
 spawnedProcs = 0
+
+message = (str) ->
+  console.log JSON.stringify ["message", str]
 
 spawn = (name, cmd, params = [], options) ->
   proc = child_process.spawn cmd, params, options
@@ -23,12 +27,17 @@ checkMysql = ->
   child_process.exec "mysql -uroot -e ''", (err, stdout, stderr) ->
     ready = stderr.search(/ERROR/) is -1
 
-    return runTests() if ready
+    return importSchema() if ready
 
     setTimeout checkMysql, 250
 
-runTests = ->
+importSchema = ->
+  fs.exists "/horde/conf/schema.sql", (exists) ->
+    return runTests() if not exists
+    child_process.exec "/usr/bin/mysql -u root horde_test < /horde/conf/schema.sql", (err, stdout, stderr) ->
+      runTests()
 
+runTests = ->
   options =
     cwd: "/var/www"
     env: process.env

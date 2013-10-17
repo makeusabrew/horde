@@ -35,6 +35,15 @@ RUN npm install -g coffee-script
 # any custom apache modules
 RUN a2enmod rewrite
 
+# scrap the default apache vhost
+RUN rm -f /etc/apache2/sites-enabled/000-default
+
+# config sub dir
+RUN mkdir /horde/conf
+RUN touch /horde/conf/schema.sql
+RUN touch /horde/conf/default.conf
+RUN ln -s /horde/conf/default.conf /etc/apache2/sites-enabled/000-default
+
 # make the apache startup script available & executable
 ADD ./scripts/start-apache.sh /horde/start-apache
 RUN chmod +x /horde/start-apache
@@ -44,12 +53,8 @@ ADD ./scripts/start-mysql.sh /horde/start-mysql
 RUN chmod +x /horde/start-mysql
 
 # DB setup and initial schema import
-ADD ./conf/schema.sql /horde/schema.sql
 ADD ./scripts/configure-mysql.sh /horde/configure-mysql.sh
 RUN /bin/bash /horde/configure-mysql.sh
-
-# copy our custom vhost configuration over the default
-ADD ./conf/all-vhosts.conf /etc/apache2/sites-enabled/000-default
 
 ADD scripts/boot.coffee /horde/boot.coffee
 RUN chmod +x /horde/boot.coffee
