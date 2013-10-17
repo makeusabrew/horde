@@ -12,13 +12,12 @@ spawn = (name, cmd, params = [], options) ->
 
   procs[name] = proc
 
-  proc.stdout.on "data", (data) -> process.stdout.write "[#{name}] #{data}"
   proc.stderr.on "data", (data) -> process.stderr.write "[#{name}] #{data}"
+
   proc.on "exit", (code) ->
-    process.stdout.write "[#{name}] exit #{code}"
+
     spawnedProcs -= 1
-    if spawnedProcs is 0
-      process.exit 0
+    process.exit 0 if spawnedProcs is 0
 
 checkMysql = ->
   child_process.exec "mysql -uroot -e ''", (err, stdout, stderr) ->
@@ -35,7 +34,10 @@ runTests = ->
     env: process.env
 
   args = process.argv[2..]
+
   spawn "zombie", "./node_modules/mocha/bin/_mocha", args, options
+
+  procs.zombie.stdout.on "data", (data) -> process.stdout.write data
 
   procs.zombie.on "exit", (code) ->
     procs.mysqld.kill()

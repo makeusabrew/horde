@@ -119,17 +119,11 @@ runSuite = (suite, done) ->
   cmd = child_process.spawn "docker", combinedArgs
 
   cmd.stdout.on "data", (d) ->
-    #process.stdout.write d
-
     lines = d.toString("utf8").split "\n"
+
     for line in lines
-      zombie = line.split "[zombie] "
-      continue if zombie.length isnt 2
-
-      json = zombie[1]
-
-      status = renderLine json, suite
-      done() if status is "end"
+      status = renderLine line, suite
+      return done() if status is "end"
 
   cmd.stderr.on "data", (d) -> process.stderr.write d
 
