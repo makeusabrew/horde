@@ -46,6 +46,11 @@ in 1 minute 21 seconds - over **85%** faster.
 
 ### Horde
 
+#### via npm
+
+* [sudo] npm install -g horde
+
+#### from source
 
 * clone this repository
 * run `npm install`
@@ -100,7 +105,7 @@ These assumptions mean that:
 ## Unleashing
 
 ```
-$ ./bin/horde --help
+$ horde --help
 
   Usage: horde [options]
 
