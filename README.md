@@ -88,7 +88,7 @@ key assumptions:
 
 These assumptions mean that:
 
-* your `default.conf` file should assume specify any relevant directives with `/var/www`
+* your `default.conf` file should specify any relevant directives with `/var/www`
   as the root. For example, if you have a 'public' folder which is typically your
   document root, instead of `DocumentRoot /path/to/myproject/public`, use `/var/www/public`
 * your site's test configuration should point to a database named `horde_test`, accessed
