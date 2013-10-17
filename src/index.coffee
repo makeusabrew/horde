@@ -4,7 +4,8 @@ path          = require "path"
 async         = require "async"
 program       = require "commander"
 
-Buffer = require "./buffer"
+Adapter = require "./adapters"
+Buffer  = require "./buffer"
 
 # store an array of child processes
 procs = []
@@ -290,26 +291,6 @@ writeResults = (results, file, cb) ->
     throw err if err
     cb()
 
-getTestCount = (files, done) ->
-  testFiles = []
-  async.forEach files, (item, callback) ->
-    fs.readFile "#{program.source}/#{item}", (err, data) ->
-      throw err if err
-
-      # we take the number of it "...", -> expectations as a rough indicator
-      # of the number of tests in this file, but it's NOT exact at all
-      # particularly as the matched 'it' could be inside a comment block
-      matches = data.toString().match /it ".+", ->/g
-
-      testFiles.push
-        path: item
-        testCount: matches.length
-
-      callback()
-  , (err) ->
-    throw err if err
-    done testFiles
-
 Horde =
   start: ->
     program
@@ -350,17 +331,12 @@ Horde =
 
     console.log ""
 
-    child_process.exec "ls -lah #{program.source}/test/*.coffee", (err, stdout, stderr) ->
-      lines = stdout.split "\n"
-      files = []
+    # @TODO detect & support other adapters
+    adapter = Adapter.get "mocha/coffee", directory: program.source
 
-      for line in lines
-        # @TODO JS support
-        matches = line.match /(test\/.+\.coffee$)/
-        files.push matches[1] if matches
-
+    adapter.fetchTestFiles (files) ->
       # first of all work out roughly how many tests are in each file
-      getTestCount files, (testFiles) ->
+      adapter.getTestCount files, (testFiles) ->
         # then try and split them into the best-fitting suites
         chunkTests testFiles, (chunks) ->
           # @TODO suites is global at the mo, ideally it wouldn't be...
