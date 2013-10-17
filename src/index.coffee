@@ -24,11 +24,28 @@ config   = program.config
 if not config
   configPath = path.join(hostDir, "horde/")
 
-  if not fs.existsSync configPath
-    throw "Please supply a --config directory"
+  console.warn "[WARN] No config option supplied, checking to see if #{configPath} exists..."
 
-  console.log "Assuming --config should be read from #{configPath}"
+  if not fs.existsSync configPath
+    console.error "[ERROR] Please supply a valid --config directory"
+    process.exit 1
+
   config = configPath
+
+console.log "[INFO] Using #{configPath} as config directory"
+
+if not fs.existsSync path.join(configPath, "default.conf")
+  console.error "[ERROR] Apache configuration file default.conf not found"
+  process.exit 1
+
+console.log "[INFO] Found apache configuration file"
+
+if not fs.existsSync path.join(configPath, "schema.sql")
+  console.error "[INFO] Proceeding without MySQL schema file schema.sql"
+else
+  console.log "[INFO] Found MySQL schema file"
+
+console.log ""
 
 suites = []
 
