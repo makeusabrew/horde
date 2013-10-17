@@ -58,7 +58,8 @@ upon initialisation: one for MySQL and one for Apache. For the time being
 these configuration files *must* live in the same directory *and* match specific
 filenames so that the horde image can find them. This directory can live anywhere
 but since it'll probably be specific to the project you're testing it's advisable
-to keep it there, perhaps under a `horde/` directory.
+to keep it there under a `horde/` directory. This also helps when running
+the horde script as it'll look there first for any configuration files.
 
 ### default.conf
 
