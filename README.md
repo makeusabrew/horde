@@ -32,8 +32,8 @@ NodeJS instance.
 
 Because running large integration suites in parallel - in *my* experience at
 least - can yield **huge** speed increases. A sample suite of 1,062 tests
-which previously took 9 minutes 20 seconds to run now executes in 1 minute
-21 seconds - over **85%** faster.
+which previously took around 9 minutes 20 seconds to run now executes at best
+in 1 minute 21 seconds - over **85%** faster.
 
 ## Getting started
 
@@ -41,10 +41,12 @@ which previously took 9 minutes 20 seconds to run now executes in 1 minute
 
 * install [docker](http://www.docker.io/gettingstarted/#h_installation) if you haven't already
 * add your user to the `docker` group so you don't have to keep running every docker command with `sudo`
+  (and since horde spawns docker sub processes, it means you don't have to run *that* with sudo either)
+* pull down the horde [docker image](https://index.docker.io/u/makeusabrew/horde/): `docker pull makeusabrew/horde`
 
 ### Horde
 
-* pull down the horde [docker image](https://index.docker.io/u/makeusabrew/horde/): `docker pull makeusabrew/horde`
+
 * clone this repository
 * run `npm install`
 * run `npm install -g coffee-script` if you don't already have it
