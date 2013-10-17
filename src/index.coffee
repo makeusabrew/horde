@@ -28,7 +28,7 @@ chunkTests = (files, callback) ->
   # http://en.wikipedia.org/wiki/Partition_problem#The_k-partition_problem
   # https://www.google.co.uk/search?q=k+partition+problem&oq=k+partition+problem
 
-  console.log "Fetching optimum suite distribution for #{program.procs} containers, please wait..."
+  console.log "Fetching optimum distribution for ~#{sum} tests in #{files.length} files across #{program.procs} containers..."
 
   # first pass, we chunk by number of tests, highest -> lowest
   files.sort (a, b) -> return b.testCount - a.testCount
