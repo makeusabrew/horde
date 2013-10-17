@@ -9,11 +9,11 @@ Buffer = require "./buffer"
 procs = []
 
 program
-  .option("-p, --procs <n>", "Number of processes to spawn", parseInt, 4)
+  .option("-p, --procs <n>", "Number of containers to spawn [4]", parseInt, 4)
   .option("-o, --output [file]", "XML file to write JUnit results to")
-  .option("-s, --source [dir]", "Source directory")
-  .option("-i, --image [image]", "Docker image to use", "makeusabrew/horde")
+  .option("-s, --source [dir]", "Source directory to mount")
   .option("-c, --config [dir]", "Configuration directory to mount")
+  .option("-i, --image [image]", "Docker image to use [makeusabrew/horde]", "makeusabrew/horde")
   .parse process.argv
 
 maxProcs = program.procs
