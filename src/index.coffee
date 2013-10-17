@@ -175,6 +175,9 @@ runSuite = (suite, done) ->
 
   procs.push cmd
 
+  if procs.length is maxProcs
+    console.log "\nPlease wait while your containers start MySQL and Apache..."
+
 recentlyFinished = []
 doLineSummary = (length) ->
   pc = Math.round((length / totalTests) * 100)
