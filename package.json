@@ -1,11 +1,19 @@
 {
   "name": "horde",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Unleash the horde!",
+  "preferGlobal": true,
+  "bin": {
+    "horde": "./bin/horde.js"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "prepublish": "grunt compile"
   },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:makeusabrew/tidy-prompt.git"
+   },
   "repository": "",
   "author": "Nick Payne <nick@kurai.co.uk>",
   "license": "MIT",
