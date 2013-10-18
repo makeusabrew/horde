@@ -58,7 +58,7 @@ RUN chmod +x /horde/start-apache
 ADD ./scripts/start-mysql.sh /horde/start-mysql
 RUN chmod +x /horde/start-mysql
 
-# DB setup and initial schema import
+# DB setup
 ADD ./scripts/configure-mysql.sh /horde/configure-mysql.sh
 RUN /bin/bash /horde/configure-mysql.sh
 
