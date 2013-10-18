@@ -37,9 +37,11 @@ class MochaAdapter extends Adapter
         # particularly as the matched 'it' could be inside a comment block
         matches = data.toString().match @testPattern
 
-        testFiles.push
-          path: item
-          testCount: matches.length
+        if matches isnt null
+          # we have to allow for empty / invalid files which we'll ignore
+          testFiles.push
+            path: item
+            testCount: matches.length
 
         callback()
     , (err) ->
