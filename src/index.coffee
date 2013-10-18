@@ -332,7 +332,7 @@ Horde =
     console.log ""
 
     # @TODO detect & support other adapters
-    adapter = Adapter.get "mocha/coffee", directory: program.source
+    adapter = Adapter.get "mocha/coffeescript", directory: program.source
 
     adapter.fetchTestFiles (files) ->
       # first of all work out roughly how many tests are in each file
