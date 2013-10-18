@@ -304,36 +304,40 @@ Horde =
 
     if not program.source
       program.source = process.cwd()
-      console.log "[INFO] No source option supplied, using current working directory..."
+      console.log "No source option supplied, using current working directory..."
 
     if not program.config
       configPath = path.join(program.source, "horde/")
 
-      console.log "[INFO] No config option supplied, checking to see if #{configPath} exists..."
+      console.log "No config option supplied, checking to see if #{configPath} exists..."
 
       if not fs.existsSync configPath
-        console.error "[ERROR] Please supply a valid --config directory"
+        console.error "Please supply a valid --config directory"
         process.exit 1
 
       program.config = configPath
 
-      console.log "[INFO] Using #{configPath} as config directory"
+      console.log "Using #{configPath} as config directory"
 
     if not fs.existsSync path.join(configPath, "default.conf")
-      console.error "[ERROR] Apache configuration file default.conf not found"
+      console.error "Apache configuration file default.conf not found"
       process.exit 1
 
-    console.log "[INFO] Found apache configuration file"
+    console.log "Found apache configuration file"
 
     if not fs.existsSync path.join(configPath, "schema.sql")
-      console.error "[INFO] Proceeding without MySQL schema file schema.sql"
+      console.error "Proceeding without MySQL schema file schema.sql"
     else
-      console.log "[INFO] Found MySQL schema file"
+      console.log "Found MySQL schema file"
+
+    # @TODO detect & support other adapters
+    adapterName = "mocha/coffeescript"
+
+    console.log "Using #{adapterName} adapter"
 
     console.log ""
 
-    # @TODO detect & support other adapters
-    adapter = Adapter.get "mocha/coffeescript", directory: program.source
+    adapter = Adapter.get adapterName, directory: program.source
 
     adapter.fetchTestFiles (files) ->
       # first of all work out roughly how many tests are in each file
