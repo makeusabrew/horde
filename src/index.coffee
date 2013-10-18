@@ -13,6 +13,7 @@ procs = []
 suites = []
 
 chunkTests = (files, callback) ->
+  return callback [] if files.length is 0
 
   sum = (f.testCount for f in files).reduce (a, b) -> a + b
 
