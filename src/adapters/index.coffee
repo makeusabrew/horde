@@ -1,8 +1,8 @@
 module.exports =
 class Adapter
   @get: (adapterName, options) ->
-    Adapter = require "./#{adapterName}"
-    return new Adapter options
+    adapter = require "./#{adapterName}"
+    return new adapter options
 
   constructor: (options) ->
     {@directory} = options
