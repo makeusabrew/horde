@@ -1,7 +1,7 @@
-MochaAdapter = require "../mocha"
+MochaRunner = require "../mocha"
 
 module.exports =
-class MochaCoffeeAdapter extends MochaAdapter
+class MochaCoffeeRunner extends MochaRunner
 
   setProperties: ->
     @extension = "coffee"

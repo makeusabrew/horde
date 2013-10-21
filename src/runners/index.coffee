@@ -1,8 +1,8 @@
 module.exports =
-class Adapter
-  @get: (adapterName, options) ->
-    adapter = require "./#{adapterName}"
-    return new adapter options
+class Runner
+  @factory: (name, options) ->
+    runner = require "./#{name}"
+    return new runner options
 
   constructor: (options) ->
     {@directory} = options

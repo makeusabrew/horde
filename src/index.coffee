@@ -4,7 +4,7 @@ path          = require "path"
 async         = require "async"
 program       = require "commander"
 
-Adapter = require "./adapters"
+Runner = require "./runners"
 Buffer  = require "./buffer"
 
 # store an array of child processes
@@ -330,18 +330,18 @@ Horde =
     else
       console.log "Found MySQL schema file"
 
-    # @TODO detect & support other adapters
-    adapterName = "mocha/coffeescript"
+    # @TODO detect & support other runners
+    runnerName = "mocha/coffeescript"
 
-    console.log "Using #{adapterName} adapter"
+    console.log "Using #{runnerName} runner"
 
     console.log ""
 
-    adapter = Adapter.get adapterName, directory: program.source
+    runner = Runner.factory runnerName, directory: program.source
 
-    adapter.fetchTestFiles (files) ->
+    runner.fetchTestFiles (files) ->
       # first of all work out roughly how many tests are in each file
-      adapter.getTestCount files, (testFiles) ->
+      runner.getTestCount files, (testFiles) ->
         # then try and split them into the best-fitting suites
         chunkTests testFiles, (chunks) ->
           # @TODO suites is global at the mo, ideally it wouldn't be...

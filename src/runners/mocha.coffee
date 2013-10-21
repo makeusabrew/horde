@@ -2,10 +2,10 @@ child_process = require "child_process"
 fs            = require "fs"
 async         = require "async"
 
-Adapter = require "../adapters"
+Runner = require "../runners"
 
 module.exports =
-class MochaAdapter extends Adapter
+class MochaRunner extends Runner
   constructor: (options) ->
     super options
 
