@@ -13,4 +13,4 @@ process.on "SIGINT", ->
 
 # unleash the horde!
 
-Horde.start()
+Horde.start process.argv

@@ -293,14 +293,14 @@ writeResults = (results, file, cb) ->
     cb()
 
 Horde =
-  start: ->
+  start: (params) ->
     program
       .option("-p, --procs <n>", "Number of containers to spawn [4]", parseInt, 4)
       .option("-o, --output [file]", "XML file to write JUnit results to")
       .option("-s, --source [dir]", "Source directory to mount [process.cwd()]")
       .option("-c, --config [dir]", "Configuration directory to mount [--source/horde]")
       .option("-i, --image [image]", "Docker image to use [makeusabrew/horde]", "makeusabrew/horde")
-      .parse process.argv
+      .parse params
 
     if not program.source
       program.source = process.cwd()

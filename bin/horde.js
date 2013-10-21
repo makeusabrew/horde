@@ -9,4 +9,4 @@ process.on("SIGINT", function() {
   return process.exit(0);
 });
 
-Horde.start();
+Horde.start(process.argv);
