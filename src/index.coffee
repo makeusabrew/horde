@@ -5,14 +5,13 @@ async         = require "async"
 program       = require "commander"
 
 Runner = require "./runners"
-Buffer  = require "./buffer"
+Buffer = require "./buffer"
 
 # store an array of child processes
+# @TODO de-globalise
 procs = []
 
-suites = []
-
-chunkTests = (files, callback) ->
+createSuites = (files, callback) ->
   return callback [] if files.length is 0
 
   sum = (f.testCount for f in files).reduce (a, b) -> a + b
@@ -99,7 +98,7 @@ totalStats =
 
 testResults = {}
 
-runSuites = (done) ->
+runSuites = (suites, done) ->
 
   # make sure we get the most accurate start time
   totalStats.start = new Date()
@@ -211,7 +210,7 @@ renderLine = (line, suite) ->
 
   return status
 
-doSummary = ->
+doSummary = (suites) ->
   buffer.moveToEnd()
   doLineSummary totalTests
   process.stdout.write "\n\n#{Array(buffer.lineLength+1).join("-")}\n\n"
@@ -343,12 +342,11 @@ Horde =
       # first of all work out roughly how many tests are in each file
       runner.getTestCount files, (testFiles) ->
         # then try and split them into the best-fitting suites
-        chunkTests testFiles, (chunks) ->
-          # @TODO suites is global at the mo, ideally it wouldn't be...
-          suites = chunks
-          runSuites ->
+        createSuites testFiles, (suites) ->
+          # now run all the test suites...
+          runSuites suites, ->
             # once we're all done, sum up
-            doSummary()
+            doSummary suites
 
   stop: ->
     proc.kill() for proc in procs
