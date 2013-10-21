@@ -2,7 +2,7 @@ child_process = require "child_process"
 fs            = require "fs"
 async         = require "async"
 
-Runner = require "../runners"
+Runner = require "../"
 
 module.exports =
 class MochaRunner extends Runner
