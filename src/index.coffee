@@ -137,7 +137,9 @@ runSuite = (suite, done) ->
   procs.push cmd
 
   if procs.length is program.procs
-    console.log "\nPlease wait while your containers start MySQL and Apache..."
+    # this needs to be fairly generic, but there's no reason they can't somehow
+    # broadcast what they're about to start; or the runner can contain this line...
+    console.log "\nPlease wait while your containers start their services..."
 
 recentlyFinished = []
 doLineSummary = (length) ->
