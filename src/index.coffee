@@ -7,6 +7,8 @@ program       = require "commander"
 Runner = require "./runners"
 Buffer = require "./buffer"
 
+XUnitReporter = require "./reporters/xunit"
+
 # store an array of child processes
 # @TODO de-globalise
 procs = []
@@ -251,43 +253,12 @@ doExit = ->
   process.exit returnCode
 
 writeResults = (results, file, cb) ->
-  buffer = []
-  buffer.push '<testsuite name="Mocha Tests" tests="'+totalStats.tests+'" failures="'+totalStats.failures+'" errors="0" skip="'+totalStats.pending+'" timestamp="'+totalStats.start.toString()+'" time="'+totalStats.secs+'">'
 
-  for test in results
-    details = test.details
+  reporter = new XUnitReporter
 
-    if details.fullTitle
-      idx = details.fullTitle.indexOf(details.title)
-      if idx isnt -1
-        fullTitle = details.fullTitle.substr(0, idx-1)
-      else
-        fullTitle = details.fullTitle
-    else
-      fullTitle = ""
+  str = reporter.formatResults results, totalStats
 
-    if details.title
-      title = details.title
-    else
-      title = ""
-
-    title = title.replace /"/g, ""
-    title = title.replace /&/g, "&amp;"
-
-    fullTitle = fullTitle.replace /"/g, ""
-    fullTitle = fullTitle.replace /&/g, "&amp;"
-
-    switch test.status
-      when "pass"
-        buffer.push '<testcase classname="'+fullTitle+'" name="'+title+'" time="'+(details.duration / 1000)+'"/>'
-      when "fail"
-        buffer.push '<testcase classname="'+fullTitle+'" name="'+title+'" time="'+(details.duration / 1000)+'">'
-        buffer.push '<failure classname="'+fullTitle+'" name="'+title+'" time="'+(details.duration / 1000)+'">Test Failed</failure>'
-        buffer.push '</testcase>'
-
-  buffer.push '</testsuite>'
-
-  fs.writeFile file, buffer.join("\n"), (err) ->
+  fs.writeFile file, str, (err) ->
     throw err if err
     cb()
 
