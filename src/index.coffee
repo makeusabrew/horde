@@ -279,7 +279,7 @@ Horde =
       console.log "No source option supplied, using current working directory..."
 
     if not program.config
-      configPath = path.join(program.source, "horde/")
+      configPath = path.join(program.source, "horde/conf/")
 
       console.log "No config option supplied, checking to see if #{configPath} exists..."
 
@@ -291,16 +291,11 @@ Horde =
 
       console.log "Using #{configPath} as config directory"
 
-    if not fs.existsSync path.join(configPath, "default.conf")
-      console.error "Apache configuration file default.conf not found"
+    if not fs.existsSync path.join(configPath, "apache.conf")
+      console.error "Apache configuration file apache.conf not found"
       process.exit 1
 
     console.log "Found apache configuration file"
-
-    if not fs.existsSync path.join(configPath, "schema.sql")
-      console.error "Proceeding without MySQL schema file schema.sql"
-    else
-      console.log "Found MySQL schema file"
 
     # @TODO detect & support other runners
     runnerName = "mocha/coffeescript"

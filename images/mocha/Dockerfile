@@ -46,9 +46,8 @@ RUN rm -f /etc/apache2/sites-enabled/000-default
 
 # config sub dir
 RUN mkdir /horde/conf
-RUN touch /horde/conf/schema.sql
-RUN touch /horde/conf/default.conf
-RUN ln -s /horde/conf/default.conf /etc/apache2/sites-enabled/000-default
+RUN touch /horde/conf/apache.conf
+RUN ln -s /horde/conf/apache.conf /etc/apache2/sites-enabled/000-default
 
 # make the apache startup script available & executable
 ADD ./scripts/start-apache.sh /horde/start-apache

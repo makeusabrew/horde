@@ -27,17 +27,9 @@ checkMysql = ->
   child_process.exec "mysql -uroot -e ''", (err, stdout, stderr) ->
     ready = stderr.search(/ERROR/) is -1
 
-    return importSchema() if ready
+    return runTests() if ready
 
-    setTimeout checkMysql, 250
-
-importSchema = ->
-  # @TODO this needs removing; any preflight bootstrapping should be managed by
-  # the test suite program itself
-  fs.exists "/horde/conf/schema.sql", (exists) ->
-    return runTests() if not exists
-    child_process.exec "/usr/bin/mysql -u root horde_test < /horde/conf/schema.sql", (err, stdout, stderr) ->
-      runTests()
+    setTimeout checkMysql, 200
 
 runTests = ->
   options =
@@ -54,13 +46,12 @@ runTests = ->
   # does this command have to even be specified here? Why can't it be
   # an argument just like any other, making the *docker* image in which
   # this lives more agnostic and re-usable...
-  # @TODO 'zombie' isn't the right name for this proc of course
   ###
-  spawn "zombie", "./node_modules/mocha/bin/_mocha", args, options
+  spawn "runner", "./node_modules/mocha/bin/_mocha", args, options
 
-  procs.zombie.stdout.on "data", (data) -> process.stdout.write data
+  procs.runner.stdout.on "data", (data) -> process.stdout.write data
 
-  procs.zombie.on "exit", (code) ->
+  procs.runner.on "exit", (code) ->
     procs.mysqld.kill()
     procs.apached.kill()
 

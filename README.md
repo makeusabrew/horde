@@ -60,26 +60,20 @@ in 1 minute 21 seconds - over **85%** faster.
 ## Configuration (LAMP environment setup)
 
 In order to make the `makeusabrew/horde` docker image reusable you need
-to give it a hand by creating a couple of configuration files it'll look for
-upon initialisation: one for MySQL and one for Apache. For the time being
-these configuration files *must* live in the same directory *and* match specific
-filenames so that the horde image can find them. This directory can live anywhere
+to give it a hand by creating an apache configuration file it'll look for
+upon initialisation. For the time being
+this configuration file *must* match a specific
+filename so that the horde image can find it. This directory can live anywhere
 but since it'll probably be specific to the project you're testing it's advisable
 to keep it there under a `horde/` directory. This also helps when running
 the horde script as it'll look there first for any configuration files.
 
-### default.conf
+### apache.conf
 
 This is the apache configuration file needed in order to run your site. At run time
 it'll be linked as the *only* file in `/etc/apache2/sites-enabled/` and as
 such will act as the container's default (and only) host. In my usage so far this
 has amounted to a single `VirtualHost` entry adapted from the site I'm testing.
-
-### schema.sql (optional)
-
-If present, this file will be run once upon container initialisation. It allows you
-to initialise the test database with a clean schema against which your test
-fixtures can be run.
 
 ### Assumptions
 
@@ -95,7 +89,7 @@ key assumptions:
 
 These assumptions mean that:
 
-* your `default.conf` file should specify any relevant directives with `/var/www`
+* your `apache.conf` file should specify any relevant directives with `/var/www`
   as the root. For example, if you have a 'public' folder which is typically your
   document root, instead of `DocumentRoot /path/to/myproject/public`, use `/var/www/public`
 * your site's test configuration should point to a database named `horde_test`, accessed
@@ -134,12 +128,10 @@ directory will be mounted within each container as `/var/www`.
 **Default:** `horde/` sub directory of `--source` option
 
 An absolute path to a directory containing
-the aforementioned `default.conf` apache configuration file. If it
-contains a `schema.sql` this will be run against the MySQL server
-within each container upon initialisation. This directory can live
-anywhere but since it'll probably be specific to the project you're
-testing it's advisable to keep it there, hence why the `horde/` sub
-directory is checked first.
+the aforementioned `apache.conf` apache configuration file. This
+directory can live anywhere but since it'll probably be specific to
+the project you're testing it's advisable to keep it there, hence
+why the `horde/` sub directory is checked first.
 
 
 #### --procs
