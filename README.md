@@ -37,6 +37,8 @@ in 1 minute 21 seconds - over **85%** faster.
 
 ## Getting started
 
+## PLEASE NOTE: horde is in a serious state of flux; it's not practical keeping the docs up to date so they will most likely be wrong!
+
 ### Docker
 
 * install [docker](http://www.docker.io/gettingstarted/#h_installation) if you haven't already
