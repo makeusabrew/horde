@@ -1,0 +1,46 @@
+#!/usr/bin/env coffee
+
+# Horde
+# Image
+# Manager
+# (...)
+#
+# quick & dirty tool to manage the various docker images which make up docker packages/bundles/modules/etc
+
+fs = require "fs"
+spawn = require("child_process").spawn
+
+cmd = process.argv[2]
+
+throw "Arg required" if not cmd
+
+inspect = ->
+  console.log "todo"
+  # the idea is that this will print a dependency chain about this image
+  # something like:
+  #
+  # horde/module-mocha-lamp
+  # -> horde/base-lamp
+  #    -> horde/core
+  #       -> Ubuntu:12.10 [D]
+
+build = ->
+  buffer = fs.readFileSync "./Dockerfile"
+  str = buffer.toString "utf8"
+
+  [head, tail...] = str.split "\n"
+
+  matches = head.match /build as (.+)$/
+
+  throw "No valid meta line found" if not matches
+
+  image = matches[1]
+
+  console.log "Building docker image #{image}...\n"
+  child = spawn "docker", ["build", "-t", image, "."]
+
+  child.stdout.pipe process.stdout
+  child.stderr.pipe process.stderr
+
+inspect() if cmd is "inspect"
+build() if cmd is "build"
