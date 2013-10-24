@@ -1,3 +1,4 @@
+# horde meta: build as horde/module-phpunit-lamp
 FROM horde/base-lamp
 
 MAINTAINER Nick Payne <nick@kurai.co.uk>
@@ -13,5 +14,5 @@ RUN wget https://phar.phpunit.de/phpunit.phar --no-check-certificate -P /horde
 RUN chmod +x /horde/phpunit.phar
 RUN mv /horde/phpunit.phar /usr/local/bin/phpunit
 
-ADD scripts/boot.coffee /horde/boot.coffee
-RUN chmod +x /horde/boot.coffee
+ADD scripts/boot.coffee /horde/boot
+RUN chmod +x /horde/boot

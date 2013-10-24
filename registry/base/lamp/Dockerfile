@@ -1,9 +1,7 @@
-FROM horde/base
+# horde meta: build as horde/base-lamp
+FROM horde/core
 
 MAINTAINER Nick Payne <nick@kurai.co.uk>
-
-## LAMP base box
-
 
 # Put the AMP in ‘LAMP’
 RUN apt-get -y install mysql-client mysql-server apache2 libapache2-mod-php5 php5-mysql

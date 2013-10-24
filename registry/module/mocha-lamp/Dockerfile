@@ -1,3 +1,4 @@
+# horde meta: build as horde/module-mocha-lamp
 FROM horde/base-lamp
 
 MAINTAINER Nick Payne <nick@kurai.co.uk>
@@ -20,5 +21,5 @@ RUN cd /horde/node && make install
 # global npm modules
 RUN npm install -g coffee-script
 
-ADD scripts/boot.coffee /horde/boot.coffee
-RUN chmod +x /horde/boot.coffee
+ADD scripts/boot.coffee /horde/boot
+RUN chmod +x /horde/boot

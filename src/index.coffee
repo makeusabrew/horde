@@ -116,7 +116,7 @@ runSuite = (suite, done) ->
     # @TODO either the boot script knows *everything* it needs to do OR nothing, not half and half
     # like this. at the moment it runs mocha but takes args externally - that's totally messed up
     #
-    " #{program.image} /horde/boot.coffee --reporter json-stream"
+    " #{program.image} /horde/boot --reporter json-stream"
   extraArgs    = (file for file in suite.files)
   combinedArgs = [].concat baseArgs.split(" "), extraArgs
 

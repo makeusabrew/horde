@@ -1,3 +1,4 @@
+# horde meta: build as horde/core
 FROM ubuntu:12.10
 
 MAINTAINER Nick Payne <nick@kurai.co.uk>
