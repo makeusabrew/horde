@@ -3,25 +3,18 @@
 child_process = require "child_process"
 fs            = require "fs"
 
-procs = {}
-spawnedProcs = 0
-
 message = (str) ->
   console.log JSON.stringify ["message", str]
 
 spawn = (name, cmd, params = [], options) ->
   proc = child_process.spawn cmd, params, options
 
-  spawnedProcs += 1
-
-  procs[name] = proc
-
   proc.stderr.on "data", (data) -> process.stderr.write "[#{name}] #{data}"
 
   proc.on "exit", (code) ->
+    console.log "[#{name}] exit #{code}"
 
-    spawnedProcs -= 1
-    process.exit 0 if spawnedProcs is 0
+  return proc
 
 checkMysql = ->
   child_process.exec "mysql -uroot -e ''", (err, stdout, stderr) ->
@@ -47,17 +40,33 @@ runTests = ->
   # an argument just like any other, making the *docker* image in which
   # this lives more agnostic and re-usable...
   ###
-  spawn "runner", "./node_modules/mocha/bin/_mocha", args, options
+  runner = spawn "runner", "./node_modules/mocha/bin/_mocha", args, options
 
-  procs.runner.stdout.on "data", (data) -> process.stdout.write data
+  runner.stdout.on "data", (data) -> process.stdout.write data
 
-  procs.runner.on "exit", (code) ->
-    procs.mysqld.kill()
-    procs.apached.kill()
+  runner.on "exit", (code) ->
+    console.log "[runner] exit #{code}"
+    # we can't just kill these child processes since they spawn their own
+    # sub procs; we have to properly stop the services
+    # no need for any callbacks; when these exit we'll be left with no more
+    # processes so the parent will naturally exit itself
+    child_process.exec "mysqladmin shutdown", ->
+      console.log "killing apaches.."
+      #child_process.exec "kill -6 `cat /var/run/apache2.pid`", ->
+      #console.log arguments
+      apache.kill "SIGABRT"
+      ###
+      ka = child_process.spawn "apache2ctl", "-k stop".split " "
+
+      ka.stdout.on "data", (d) -> process.stdout.write d
+      ka.stderr.on "data", (d) -> process.stderr.write d
+      ka.on "exit", (code) -> "ka exit #{code}"
+      ###
+      #
 
 #spawn "network", "ip", ["addr", "show", "eth0"]
 spawn "mysqld", "/horde/start-mysql"
-spawn "apached", "/horde/start-apache"
+apache = spawn "apached", "/horde/start-apache"
 #spawn "sshd", "/usr/sbin/sshd", ["-D"]
 
 checkMysql()
