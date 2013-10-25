@@ -128,11 +128,16 @@ runSuite = (suite, done) ->
 
     for line in lines
       status = renderLine line, suite
-      cmd.stdin.end() if status is "end"
+      if status is "end"
+        cmd.stdin.end()
+        done()
 
   cmd.stderr.on "data", (d) -> process.stderr.write d
 
-  cmd.on "exit", (code) -> done()
+  cmd.on "exit", (code) ->
+    # ideally we'd hook into this and use it to summarise each test suite
+    # but for some reason child_process + docker run + child_process is
+    # somewhere along the line causing this to *never* be fired
 
   procs.push cmd
 
