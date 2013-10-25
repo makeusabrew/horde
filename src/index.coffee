@@ -256,7 +256,7 @@ doSummary = (suites) ->
 doExit = ->
   returnCode = if failures.length is 0 then 0 else 1
   console.log "Exiting with overall status #{returnCode}"
-  process.exit returnCode
+  Horde.stop returnCode
 
 writeResults = (results, file, cb) ->
 
@@ -320,7 +320,8 @@ Horde =
             # once we're all done, sum up
             doSummary suites
 
-  stop: ->
+  stop: (code = 0) ->
     proc.kill() for proc in procs
+    process.exit code
 
 module.exports = Horde

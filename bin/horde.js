@@ -5,8 +5,7 @@ Horde = require("../index");
 
 process.on("SIGINT", function() {
   console.log("\nCaught SIGINT, killing docker processes and exiting...");
-  Horde.stop();
-  return process.exit(0);
+  return Horde.stop();
 });
 
 Horde.start(process.argv);

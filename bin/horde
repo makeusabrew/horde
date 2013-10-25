@@ -8,9 +8,6 @@ process.on "SIGINT", ->
   # but see the note inside that callback
   Horde.stop()
 
-  # so we have to forcefully exit (not ideal)
-  process.exit 0
-
 # unleash the horde!
 
 Horde.start process.argv
