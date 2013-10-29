@@ -4,7 +4,7 @@ FROM horde/core
 MAINTAINER Nick Payne <nick@kurai.co.uk>
 
 # Put the AMP in ‘LAMP’
-RUN apt-get -y install mysql-client mysql-server apache2 libapache2-mod-php5 php5-mysql
+RUN DEBIAN_FRONTEND=noninteractive apt-get -y install mysql-client mysql-server apache2 libapache2-mod-php5 php5-mysql
 
 # php default timezone
 # @see https://gist.github.com/taion809/6850072
