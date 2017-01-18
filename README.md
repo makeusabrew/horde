@@ -1,13 +1,13 @@
 # horde
 
 Unleash hordes of [zombies](https://github.com/assaf/zombie) to tear your [test
-suite](http://visionmedia.github.io/mocha/) to shreds in record time!
+suite](http://mochajs.org/) to shreds in record time!
 
 ## What?
 
 Horde is designed to solve a fairly specific problem: speeding up very long
 running integration test suites which use the
-[Mocha](http://visionmedia.github.io/mocha/) test framework to run the
+[Mocha](http://mochajs.org/) test framework to run the
 [Zombie.js](http://zombie.labnotes.org/) headless browser against
 a fairly typical LAMP powered website.
 
